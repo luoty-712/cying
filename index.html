@@ -1,0 +1,1174 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>从那天到现在</title>
+<style>
+  :root{
+    --deep:#17324f;
+    --rose:#3b6ea9;
+    --ink:#1f3a5f;
+    --soft:rgba(23,50,79,.52);
+    --ink-soft:rgba(31,58,95,.64);
+    --serif:"Songti SC","STSong","Noto Serif SC","Source Han Serif SC",Georgia,"Times New Roman",serif;
+    --sans:"Helvetica Neue",Helvetica,"PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%;margin:0}
+
+  body{
+    background:
+      radial-gradient(150vmax 110vmax at 50% -30%, #ffffff 0%, #fbfdff 38%, #f3f9ff 72%, #e9f3ff 100%);
+    font-family:var(--sans);
+    display:flex;align-items:center;justify-content:center;
+    overflow:hidden;
+    position:relative;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  /* ---------- 背景上慢慢飘的几团光 ---------- */
+  .halo{
+    position:fixed;pointer-events:none;z-index:0;
+    border-radius:50%;filter:blur(70px);
+    will-change:transform;
+  }
+  .halo.a{
+    width:48vmax;height:48vmax;left:-14vmax;top:-16vmax;
+    background:radial-gradient(circle,rgba(186,214,255,.55),rgba(186,214,255,0) 68%);
+    animation:drift 28s ease-in-out infinite alternate;
+  }
+  .halo.b{
+    width:42vmax;height:42vmax;right:-16vmax;top:6vmax;
+    background:radial-gradient(circle,rgba(204,224,255,.42),rgba(204,224,255,0) 68%);
+    animation:drift 34s ease-in-out infinite alternate-reverse;
+  }
+  .halo.c{
+    width:40vmax;height:40vmax;left:18vmax;bottom:-20vmax;
+    background:radial-gradient(circle,rgba(206,228,255,.42),rgba(206,228,255,0) 68%);
+    animation:drift 31s ease-in-out infinite alternate;
+  }
+  @keyframes drift{
+    from{transform:translate3d(0,0,0) scale(1)}
+    to  {transform:translate3d(5vmax,4vmax,0) scale(1.1)}
+  }
+
+  /* 花瓣 */
+  #petals{position:fixed;inset:0;pointer-events:none;z-index:1}
+  .petal{
+    position:fixed;
+    top:-18vh;
+    z-index:1;
+    pointer-events:none;
+    will-change:transform;
+    animation-name:fall;
+    animation-timing-function:linear;
+    animation-iteration-count:infinite;
+  }
+  .petal svg{
+    display:block;width:100%;height:100%;
+    animation-name:sway;
+    animation-timing-function:ease-in-out;
+    animation-iteration-count:infinite;
+    animation-direction:alternate;
+    filter:drop-shadow(0 1px 2px rgba(150,190,240,.22));
+  }
+  @keyframes fall{
+    from{transform:translate3d(0,-18vh,0) rotate(-12deg)}
+    to  {transform:translate3d(var(--dx,28vw),124vh,0) rotate(var(--spin,560deg))}
+  }
+  @keyframes sway{
+    from{transform:translateX(calc(var(--sway,12px) * -1)) rotate(-16deg)}
+    to  {transform:translateX(var(--sway,12px)) rotate(18deg)}
+  }
+
+  /* 背景里的细碎光点 */
+  #stars{
+    position:fixed;inset:0;z-index:0;
+    pointer-events:none;overflow:hidden;
+  }
+  #stars i{
+    position:absolute;
+    border-radius:50%;
+    background:#ffffff;
+    box-shadow:0 0 7px 1px rgba(150,190,240,.6);
+    animation:twinkle 5s ease-in-out infinite;
+  }
+  @keyframes twinkle{
+    0%,100%{opacity:.22;transform:scale(.8)}
+    50%{opacity:1;transform:scale(1.25)}
+  }
+
+  /* 极淡的纸面颗粒，去塑料感 */
+  body::after{
+    content:"";
+    position:fixed;inset:0;z-index:1;
+    pointer-events:none;
+    opacity:.032;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/></filter><rect width='140' height='140' filter='url(%23n)'/></svg>");
+  }
+
+  /* ---------- 内容 ---------- */
+  main{
+    position:fixed;inset:0;
+    z-index:2;
+    display:flex;flex-direction:column;
+    align-items:center;justify-content:flex-end;
+    text-align:center;
+    padding:6vmin 4vmin clamp(120px,22vmin,240px);
+    animation:rise 1.2s cubic-bezier(.2,.7,.2,1) both;
+  }
+  @keyframes rise{
+    from{opacity:0;transform:translateY(16px)}
+    to  {opacity:1;transform:none}
+  }
+
+  /* 中间那句招呼 */
+  .hi{
+    position:absolute;
+    left:50%;top:50%;
+    transform:translate(-50%,-50%);
+    font-family:var(--serif);
+    font-size:clamp(32px,6.4vmin,74px);
+    line-height:1.25;
+    letter-spacing:.08em;
+    color:#14304f;
+    text-shadow:0 2px 26px rgba(255,255,255,.9), 0 0 60px rgba(255,255,255,.7);
+    white-space:nowrap;
+    animation:hiIn 1.5s cubic-bezier(.2,.7,.2,1) both;
+  }
+  .hi-cy{
+    font-size:.95em;
+    font-weight:500;
+    color:#2a5b93;
+    letter-spacing:.1em;
+  }
+  .hi-sub{
+    display:block;
+    margin-top:.85em;
+    font-size:.2em;
+    font-weight:400;
+    letter-spacing:.42em;
+    text-indent:.42em;
+    color:rgba(31,58,95,.46);
+  }
+  @keyframes hiIn{
+    from{opacity:0;transform:translate(-50%,calc(-50% + 12px))}
+    to  {opacity:1;transform:translate(-50%,-50%)}
+  }
+
+  /* 右上角的天数 */
+  .corner{
+    position:absolute;
+    top:clamp(14px,2.4vmin,28px);
+    right:clamp(16px,2.8vmin,34px);
+    text-align:right;
+  }
+
+  .label{
+    font-family:var(--serif);
+    font-size:clamp(11px,1.5vmin,14px);
+    font-weight:400;
+    letter-spacing:.18em;
+    text-indent:.18em;
+    color:rgba(31,58,95,.8);
+    margin:0 0 6px;
+  }
+
+  .days{
+    display:flex;align-items:baseline;justify-content:flex-end;gap:.1em;
+    line-height:1;
+  }
+
+  .num{
+    font-family:var(--sans);
+    font-size:clamp(30px,5vmin,52px);
+    font-weight:200;
+    letter-spacing:-.03em;
+    font-variant-numeric:tabular-nums;
+    background:linear-gradient(180deg,#4d81b8 0%,#26578c 55%,#123252 100%);
+    -webkit-background-clip:text;background-clip:text;
+    color:transparent;
+    filter:drop-shadow(0 4px 18px rgba(255,255,255,.75));
+  }
+  .unit{
+    font-size:clamp(11px,1.6vmin,15px);
+    color:rgba(31,58,95,.72);
+    letter-spacing:.12em;
+    padding-bottom:.18em;
+  }
+
+  /* 底下露出来的几张最近的照片 */
+  .strip{
+    display:flex;gap:clamp(10px,1.6vmin,16px);
+    justify-content:center;
+    margin-top:clamp(30px,5.5vmin,64px);
+  }
+  .strip[hidden]{display:none}
+  .strip a{
+    display:block;
+    width:clamp(68px,9vmin,104px);
+    aspect-ratio:1/1;
+    border-radius:9px;
+    overflow:hidden;
+    border:3px solid rgba(255,255,255,.92);
+    box-shadow:0 7px 18px -9px rgba(40,80,130,.55), 0 0 0 1px rgba(140,170,205,.14);
+    transform:rotate(var(--r,0deg));
+    transition:transform .4s cubic-bezier(.2,.8,.2,1), box-shadow .4s ease;
+  }
+  .strip a:hover{
+    transform:rotate(0deg) translateY(-5px);
+    box-shadow:0 14px 26px -12px rgba(40,80,130,.6), 0 0 0 1px rgba(140,170,205,.2);
+  }
+  .strip img{width:100%;height:100%;object-fit:cover;display:block}
+
+  /* 里程碑彩带 */
+  #flash{
+    position:fixed;inset:0;pointer-events:none;z-index:8;opacity:0;
+    background:radial-gradient(circle at 50% 46%, rgba(214,232,255,.95), rgba(214,232,255,0) 62%);
+  }
+  #flash.go{animation:flashPulse .95s ease-out}
+  @keyframes flashPulse{
+    0%  {opacity:0;transform:scale(.7)}
+    22% {opacity:1}
+    100%{opacity:0;transform:scale(1.55)}
+  }
+  #confetti{position:fixed;inset:0;pointer-events:none;z-index:9;overflow:hidden}
+  #confetti i{
+    position:absolute;left:50%;top:50%;display:block;border-radius:2px;
+    animation-name:confettiBurst;
+    animation-timing-function:cubic-bezier(.22,.7,.5,1);
+    animation-fill-mode:forwards;
+    will-change:transform,opacity;
+  }
+  #confetti i.dot{border-radius:50%}
+  #confetti i.star{
+    border-radius:0;
+    clip-path:polygon(50% 0%,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%);
+  }
+  #confetti i.slow{
+    animation-name:confettiFall;
+    opacity:.45;filter:blur(.3px);
+  }
+  @keyframes confettiBurst{
+    0%  {transform:translate3d(0,0,0) rotate3d(1,.3,.1,0deg) scale(.3);opacity:0}
+    9%  {opacity:1}
+    42% {transform:translate3d(calc(var(--bx,0) * 1vw),calc(var(--by,0) * 1vh),0) rotate3d(1,.3,.1,calc(var(--spin,360deg) * .3)) scale(1)}
+    100%{transform:translate3d(calc(var(--bx,0) * 1vw + var(--dx,0) * 1vw),106vh,0) rotate3d(1,.3,.1,var(--spin,360deg));opacity:.3}
+  }
+  @keyframes confettiFall{
+    0%  {transform:translate3d(0,-16vh,0) rotate3d(1,.3,.1,0deg);opacity:0}
+    10% {opacity:1}
+    100%{transform:translate3d(var(--dx,0vw),108vh,0) rotate3d(1,.3,.1,var(--spin,360deg));opacity:.2}
+  }
+
+  /* 左侧竖排导航 */
+  .sideBar{
+    position:fixed;
+    left:clamp(12px,2.2vmin,26px);top:50%;transform:translateY(-50%);
+    z-index:4;
+    display:flex;flex-direction:column;gap:11px;
+    padding:12px 11px;
+    border-radius:999px;
+    background:rgba(255,255,255,.5);
+    border:1px solid rgba(110,150,200,.22);
+    -webkit-backdrop-filter:blur(9px);
+    backdrop-filter:blur(9px);
+  }
+  .sItem{
+    width:46px;height:46px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    color:rgba(31,58,95,.58);
+    text-decoration:none;
+    transition:color .2s ease,background .2s ease,transform .2s ease;
+  }
+  .sItem svg{width:23px;height:23px;display:block}
+  .sItem:hover{
+    color:var(--blue);
+    background:rgba(255,255,255,.95);
+    transform:scale(1.04);
+  }
+  .sItem.on{
+    color:var(--blue);
+    background:rgba(255,255,255,.9);
+  }
+
+  @media (max-width:560px){
+    .sideBar{
+      left:50%;top:auto;bottom:clamp(12px,2.6vmin,20px);
+      transform:translateX(-50%);
+      flex-direction:row;
+      padding:9px 10px;
+    }
+    .sItem{width:40px;height:40px}
+    .sItem svg{width:20px;height:20px}
+
+    /* 窄屏：顶部那排按钮和右上天数都收小，别挤在一起 */
+    .topNav{gap:6px}
+    .chip{
+      height:32px;padding:0 11px;
+      font-size:11px;letter-spacing:.12em;text-indent:.12em;
+    }
+    .corner{top:14px;right:12px}
+    .label{
+      font-size:10px;letter-spacing:.18em;text-indent:.18em;
+      margin-bottom:2px;
+    }
+    .num{font-size:clamp(24px,6.4vmin,34px)}
+    .unit{font-size:10px}
+    .hi{white-space:normal;padding:0 18px;text-align:center}
+    .hi-sub{letter-spacing:.3em;text-indent:.3em}
+    .strip{gap:9px;margin-top:6vmin}
+    .strip a{width:clamp(62px,17vmin,84px)}
+    body{padding-bottom:104px}
+  }
+
+  /* 顶部并排的入口 */
+  .topNav{
+    position:fixed;left:50%;top:3.6vmin;transform:translateX(-50%);
+    z-index:4;
+    display:flex;align-items:stretch;gap:9px;
+  }
+  .chip{
+    position:relative;
+    display:flex;align-items:center;justify-content:center;
+    font-family:var(--serif);
+    font-size:clamp(13px,1.7vmin,16px);
+    letter-spacing:.26em;text-indent:.26em;
+    color:rgba(31,58,95,.7);
+    text-decoration:none;
+    text-align:center;
+    line-height:1.3;
+    padding:7px 17px;
+    border-radius:999px;
+    background:rgba(255,255,255,.62);
+    border:1px solid rgba(110,150,200,.26);
+    -webkit-backdrop-filter:blur(6px);
+    backdrop-filter:blur(6px);
+    transition:color .2s ease,background .2s ease,border-color .2s ease,transform .2s ease;
+  }
+  .chip:hover{
+    color:var(--rose);
+    background:rgba(255,255,255,.95);
+    border-color:rgba(110,150,200,.55);
+    transform:translateY(-1px);
+  }
+
+  /* 音乐按钮 */
+  #musicBtn{
+    position:fixed;right:5vmin;bottom:5vmin;z-index:5;
+    width:clamp(44px,6vmin,56px);height:clamp(44px,6vmin,56px);
+    border-radius:50%;
+    border:1px solid rgba(90,140,190,.22);
+    background:rgba(255,255,255,.62);
+    backdrop-filter:blur(8px);
+    -webkit-backdrop-filter:blur(8px);
+    display:flex;align-items:center;justify-content:center;
+    cursor:pointer;
+    color:#3b6ea9;
+    padding:0;
+    transition:transform .25s ease, background .25s ease, box-shadow .25s ease;
+    box-shadow:0 6px 20px rgba(120,160,205,.14);
+  }
+  #musicBtn:hover{transform:translateY(-2px) scale(1.05);background:rgba(255,255,255,.88)}
+  #musicBtn:active{transform:scale(.95)}
+  #musicBtn svg{width:46%;height:46%;display:block}
+  #musicBtn.on{
+    background:rgba(216,232,255,.92);
+    animation:pulse 2.4s ease-out infinite;
+  }
+  @keyframes pulse{
+    0%{box-shadow:0 0 0 0 rgba(150,190,240,.42)}
+    70%{box-shadow:0 0 0 14px rgba(150,190,240,0)}
+    100%{box-shadow:0 0 0 0 rgba(150,190,240,0)}
+  }
+
+  /* 跟着鼠标走的一团柔光 */
+  #cursorGlow{
+    position:fixed;left:0;top:0;
+    width:46vmax;height:46vmax;
+    margin:-23vmax 0 0 -23vmax;
+    border-radius:50%;
+    background:radial-gradient(circle, rgba(178,210,245,.30) 0%, rgba(200,222,248,.12) 42%, transparent 66%);
+    pointer-events:none;
+    z-index:1;
+    filter:blur(8px);
+    will-change:transform;
+  }
+
+  @media (max-width:520px){
+    .label{letter-spacing:.3em;text-indent:.3em}
+  }  @media (prefers-reduced-motion:reduce){
+    .petal{display:none}
+    main{animation:none}
+  }
+  /* 换页时盖上来的一层柔光 */
+  #veil{
+    position:fixed;inset:0;z-index:60;
+    pointer-events:none;
+    opacity:0;
+    background:rgba(240,248,255,.55);
+    -webkit-backdrop-filter:blur(0px) saturate(1);
+    backdrop-filter:blur(0px) saturate(1);
+    transition:opacity .46s cubic-bezier(.65,0,.35,1), -webkit-backdrop-filter .46s cubic-bezier(.65,0,.35,1), backdrop-filter .46s cubic-bezier(.65,0,.35,1);
+  }
+  #veil.in{
+    opacity:1;
+    pointer-events:auto;
+    -webkit-backdrop-filter:blur(14px) saturate(1.08);
+    backdrop-filter:blur(14px) saturate(1.08);
+  }
+
+  @media (prefers-reduced-motion:reduce){
+    #veil{transition:none}
+  }
+  /* 登录弹窗 */
+  button.chip{font:inherit;font-family:var(--serif);cursor:pointer;}
+  .modal{
+    position:fixed;inset:0;z-index:70;
+    display:flex;align-items:center;justify-content:center;
+    background:rgba(232,241,252,.7);
+    -webkit-backdrop-filter:blur(9px);backdrop-filter:blur(9px);
+  }
+  .modal[hidden]{display:none}
+  .modalBox{
+    width:min(92vw,420px);
+    padding:34px 30px 24px;
+    border-radius:20px;
+    background:rgba(255,255,255,.88);
+    -webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);
+    box-shadow:0 26px 64px -22px rgba(20,48,79,.34), 0 0 0 1px rgba(110,150,200,.16);
+  }
+  .modalBox h3{
+    position:relative;
+    font-family:var(--serif);font-weight:500;
+    font-size:21px;letter-spacing:.34em;text-indent:.34em;
+    color:var(--ink);margin-bottom:26px;text-align:center;
+  }
+  .modalBox h3::before{
+    content:"";position:absolute;left:50%;top:-13px;
+    width:26px;height:1px;margin-left:-13px;
+    background:rgba(110,150,200,.42);
+  }
+  .modalBox input{
+    display:block;width:100%;
+    height:46px;margin-bottom:13px;padding:0 15px;
+    border:1px solid rgba(110,150,200,.22);
+    background:rgba(240,247,255,.75);
+    border-radius:12px;
+    font-family:var(--serif);font-size:14.5px;color:var(--ink);
+    outline:none;
+    transition:border-color .2s ease,background .2s ease,box-shadow .2s ease;
+  }
+  .modalBox input::placeholder{color:rgba(31,58,95,.32)}
+  .modalBox input:focus{
+    border-color:rgba(59,110,169,.55);
+    background:#fff;
+    box-shadow:0 0 0 3px rgba(59,110,169,.1);
+  }
+  .modalBox .err{min-height:18px;font-size:12.5px;color:#b4485f;letter-spacing:.03em;margin:4px 0 8px}
+  .modalFoot{display:flex;justify-content:flex-end;gap:12px;margin-top:6px}
+  .modalFoot button{
+    height:40px;padding:0 24px;border-radius:999px;cursor:pointer;
+    font-family:var(--serif);font-size:13.5px;
+    letter-spacing:.2em;text-indent:.2em;
+    transition:transform .18s ease,box-shadow .2s ease,background .2s ease;
+  }
+  .modalFoot .ghost{background:transparent;border:1px solid rgba(110,150,200,.3);color:var(--ink-soft)}
+  .modalFoot .ghost:hover{background:rgba(240,247,255,.9)}
+  .modalFoot .primary{
+    background:linear-gradient(135deg,#4d81b8,#2f6098);
+    border:none;color:#fff;
+    box-shadow:0 8px 18px -8px rgba(47,96,152,.6);
+  }
+  .modalFoot .primary:hover{transform:translateY(-1px);box-shadow:0 12px 22px -8px rgba(47,96,152,.7)}
+  .modalFoot .primary:disabled{opacity:.55;cursor:default;transform:none;box-shadow:none}
+
+  /* 弹窗与按钮的小动效 */
+  .modal:not([hidden]) .modalBox{
+    animation:mdIn .34s cubic-bezier(.2,.7,.2,1) both;
+  }
+  @keyframes mdIn{
+    from{opacity:0;transform:translateY(12px) scale(.965)}
+    to{opacity:1;transform:none}
+  }
+  /* 登录 / 退出：整屏一层光缓缓漾开 */
+  #fx{
+    position:fixed;inset:0;z-index:75;
+    pointer-events:none;opacity:0;
+    transform-origin:50% 46%;
+    background:radial-gradient(circle at 50% 46%,
+      #ffffff 0%,
+      rgba(255,255,255,.95) 16%,
+      rgba(226,241,255,.78) 38%,
+      rgba(198,224,252,.42) 62%,
+      rgba(186,215,248,.16) 82%,
+      rgba(186,215,248,0) 96%);
+  }
+  #fx.out{
+    background:radial-gradient(circle at 50% 46%,
+      #eef6ff 0%,
+      rgba(214,233,252,.9) 18%,
+      rgba(176,206,240,.62) 40%,
+      rgba(150,186,226,.32) 64%,
+      rgba(140,178,222,.12) 84%,
+      rgba(140,178,222,0) 96%);
+  }
+  #fx.go{animation:fxGlow 1.6s cubic-bezier(.34,.55,.3,1) forwards}
+  @keyframes fxGlow{
+    0%{opacity:0;transform:scale(.6)}
+    20%{opacity:1;transform:scale(1)}
+    55%{opacity:.92;transform:scale(1.22)}
+    100%{opacity:0;transform:scale(1.55)}
+  }
+
+  /* 底部冒一行小提示 */
+  .toast{
+    position:fixed;left:50%;bottom:clamp(84px,13vmin,132px);
+    transform:translate(-50%,14px);
+    z-index:80;
+    padding:9px 20px 8px;
+    border-radius:999px;
+    background:rgba(255,255,255,.92);
+    border:1px solid rgba(110,150,200,.3);
+    box-shadow:0 10px 26px -12px rgba(20,48,79,.4);
+    -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
+    font-family:var(--serif);font-size:13px;
+    letter-spacing:.18em;text-indent:.18em;
+    color:var(--ink);
+    opacity:0;pointer-events:none;
+    transition:opacity .26s ease,transform .34s cubic-bezier(.2,.8,.2,1);
+  }
+  .toast.show{opacity:1;transform:translate(-50%,0)}
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <linearGradient id="petalFill" x1="0.15" y1="0" x2="0.75" y2="1">
+      <stop offset="0%"   stop-color="#ffffff"/>
+      <stop offset="45%"  stop-color="#e8f3ff"/>
+      <stop offset="100%" stop-color="#b9d6f5"/>
+    </linearGradient>
+  </defs>
+</svg>
+
+<div class="halo a"></div>
+<div class="halo b"></div>
+<div class="halo c"></div>
+
+<div id="cursorGlow"></div>
+<div id="petals"></div>
+
+<main>
+  <div class="hi" id="hi">
+    <span id="hiWord"></span><span class="hi-cy" id="hiCy"></span>
+    <span class="hi-sub">2026.10.06 · 至今</span>
+  </div>
+  <div class="corner">
+    <div class="label">今天是和cy相识的</div>
+    <div class="days">
+      <span class="num" id="num">0</span>
+      <span class="unit">天</span>
+    </div>
+  </div>
+  <div class="strip" id="strip" hidden></div>
+</main>
+
+<nav class="topNav">
+  <a class="chip" href="album.html">回忆<br>相册</a>
+  <a class="chip" href="message.html">留言</a>
+  <button class="chip" id="loginChip" type="button">登录</button>
+</nav>
+
+<nav class="sideBar" aria-label="页面导航">
+  <a class="sItem on" href="index.html" title="主页" aria-label="主页">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M4 10.6 12 4l8 6.6V19a1 1 0 0 1-1 1h-4v-5.2H9V20H5a1 1 0 0 1-1-1z"/>
+    </svg>
+  </a>
+  <a class="sItem" href="album.html" title="相册" aria-label="相册">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <rect x="3.5" y="5" width="17" height="14" rx="2.2"/>
+      <circle cx="9" cy="10" r="1.6"/>
+      <path d="M4.5 17.2 9.6 12.6l3 2.9 3-2.6 3.9 3.7"/>
+    </svg>
+  </a>
+  <a class="sItem" href="album.html?view=tl" title="时间轴" aria-label="时间轴">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M7 4.5v15"/>
+      <circle cx="7" cy="7" r="1.6"/>
+      <circle cx="7" cy="12" r="1.6"/>
+      <circle cx="7" cy="17" r="1.6"/>
+      <path d="M12 7h7M12 12h7M12 17h5"/>
+    </svg>
+  </a>
+  <a class="sItem" href="message.html" title="留言" aria-label="留言">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M20 12.4c0 3.6-3.6 6.5-8 6.5-.9 0-1.8-.1-2.6-.3L5 20l.9-3.2C4.7 15.6 4 14 4 12.4 4 8.8 7.6 6 12 6s8 2.8 8 6.4z"/>
+    </svg>
+  </a>
+</nav>
+
+<div id="flash" aria-hidden="true"></div>
+<div id="confetti" aria-hidden="true"></div>
+<div id="stars" aria-hidden="true"></div>
+
+<button id="musicBtn" aria-label="播放音乐" title="播放音乐">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M9 18V6l10-2v12"/>
+    <circle cx="6.5" cy="18" r="2.5"/>
+    <circle cx="16.5" cy="16" r="2.5"/>
+  </svg>
+</button>
+
+
+<div id="fx"></div>
+<div id="toast" class="toast"></div>
+
+<div class="modal" id="loginModal" hidden>
+  <div class="modalBox">
+    <h3>登录</h3>
+    <input id="lgUser" placeholder="账号" autocomplete="username">
+    <input id="lgPass" type="password" placeholder="密码" autocomplete="current-password">
+    <p class="err" id="lgErr"></p>
+    <div class="modalFoot">
+      <button class="ghost" id="lgCancel" type="button">取消</button>
+      <button class="primary" id="lgOk" type="button">登录</button>
+    </div>
+  </div>
+</div>
+
+<div id="veil" class="in" aria-hidden="true"></div>
+
+<script>
+
+  // ---------- 登录：登进管理员模式 ----------
+  var SB_URL = 'https://fnbdofawqxkrsmrvkzbu.supabase.co';
+  var SB_KEY = 'sb_publishable_wYr9TdOdT2aIPP7jeiLZzw_lxuhkSJm';
+  var AUTH_KEY = 'dt_admin_auth';
+
+  var loginChip = document.getElementById('loginChip');
+  var loginModal = document.getElementById('loginModal');
+  var lgUser = document.getElementById('lgUser');
+  var lgPass = document.getElementById('lgPass');
+  var lgErr = document.getElementById('lgErr');
+
+  function getAuth(){
+    try { return JSON.parse(localStorage.getItem(AUTH_KEY) || 'null'); } catch (e){ return null; }
+  }
+  function setAuth(o){ try { localStorage.setItem(AUTH_KEY, JSON.stringify(o)); } catch (e){} }
+
+  function signIn(user, pass){
+    var email = String(user).indexOf('@') >= 0 ? user : (String(user) + '@cy.local');
+    return fetch(SB_URL + '/auth/v1/token?grant_type=password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', apikey: SB_KEY },
+      body: JSON.stringify({ email: email, password: pass })
+    }).then(function(r){
+      return r.json().catch(function(){ return {}; }).then(function(j){
+        if (!r.ok){
+          if (j.error_code === 'invalid_credentials' || j.error === 'invalid_grant') throw new Error('账号或密码不对');
+          throw new Error(j.msg || '登录失败，等下再试');
+        }
+        setAuth({ access: j.access_token, refresh: j.refresh_token, exp: Date.now() + (j.expires_in || 3600) * 1000 });
+      });
+    });
+  }
+
+  var fxEl = document.getElementById('fx');
+  function screenFx(kind){
+    if (!fxEl) return;
+    fxEl.className = 'go' + (kind === 'out' ? ' out' : '');
+    clearTimeout(screenFx._t);
+    screenFx._t = setTimeout(function(){ fxEl.className = ''; }, 1650);
+  }
+
+  var toastEl = document.getElementById('toast');
+  var toastTimer = null;
+  function toast(msg){
+    if (!toastEl) return;
+    toastEl.textContent = msg;
+    toastEl.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ toastEl.classList.remove('show'); }, 1800);
+  }
+
+  var logoutChip = null;
+
+  function paintChip(){
+    if (!loginChip) return;
+    var on = !!getAuth();
+    loginChip.textContent = on ? '退出' : '登录';
+  }
+  paintChip();
+
+  window.addEventListener('storage', function(e){
+    if (!e.key || e.key === AUTH_KEY) paintChip();
+  });
+
+  if (loginChip){
+    loginChip.addEventListener('click', function(){
+      if (getAuth()){
+        try { localStorage.removeItem(AUTH_KEY); } catch (e){}
+        paintChip();
+        screenFx('out');
+        toast('已退出');
+        return;
+      }
+      lgErr.textContent = '';
+      lgUser.value = '';
+      lgPass.value = '';
+      loginModal.hidden = false;
+      setTimeout(function(){ lgUser.focus(); }, 80);
+    });
+  }
+
+  document.getElementById('lgOk').addEventListener('click', function(){
+    var btn = this;
+    var u = lgUser.value.trim();
+    var p = lgPass.value;
+    if (!u || !p){ lgErr.textContent = '账号和密码都要填'; return; }
+
+    btn.disabled = true;
+    lgErr.textContent = '';
+
+    signIn(u, p).then(function(){
+      loginModal.hidden = true;
+      paintChip();
+      screenFx('in');
+      toast('已登录');
+    }).catch(function(e){
+      lgErr.textContent = e.message || '登录失败';
+    }).then(function(){
+      btn.disabled = false;
+    });
+  });
+
+  lgPass.addEventListener('keydown', function(e){
+    if (e.key === 'Enter') document.getElementById('lgOk').click();
+  });
+
+  document.getElementById('lgCancel').addEventListener('click', function(){ loginModal.hidden = true; });
+  // 起点：2026-10-06 算第 1 天（按北京时间自然日，过 0 点就加一天）
+  var START_DAY = Date.UTC(2026, 9, 5, 16, 0, 0);   // 北京 2026-10-06 00:00
+  var DAY = 86400000;
+
+  // 北京时间当天 0 点的时间戳
+  function bjToday(){
+    var t = new Date(Date.now() + 8 * 3600000);
+    return Date.UTC(t.getUTCFullYear(), t.getUTCMonth(), t.getUTCDate()) - 8 * 3600000;
+  }
+
+  // 北京时间第二天 0 点
+  function bjNextMidnight(){
+    var t = new Date(Date.now() + 8 * 3600000);
+    return Date.UTC(t.getUTCFullYear(), t.getUTCMonth(), t.getUTCDate() + 1) - 8 * 3600000;
+  }
+
+  function currentDays(){
+    return Math.max(1, Math.floor((bjToday() - START_DAY) / DAY) + 1);
+  }
+
+  var numEl = document.getElementById('num');
+  var lastDays = -1;
+  var entered = false;
+
+  // 进场：数字从 0 滚上去
+  function countUp(target){
+    var t0 = performance.now();
+    var dur = 1500;
+    function step(t){
+      var k = Math.min(1, (t - t0) / dur);
+      var e = 1 - Math.pow(1 - k, 3);   // easeOutCubic
+      numEl.textContent = Math.round(target * e);
+      if (k < 1) requestAnimationFrame(step);
+      else numEl.textContent = target;
+    }
+    requestAnimationFrame(step);
+  }
+
+  // ---------- 里程碑彩带 ----------
+  var MILESTONES = [100, 200, 300, 365, 520, 666, 888, 1000, 1314, 2026];
+  var confettiBox = document.getElementById('confetti');
+  var flashBox = document.getElementById('flash');
+
+  function fireConfetti(){
+    if (!confettiBox) return;
+
+    if (flashBox){
+      flashBox.classList.remove('go');
+      void flashBox.offsetWidth;
+      flashBox.classList.add('go');
+      setTimeout(function(){ flashBox.classList.remove('go'); }, 1100);
+    }
+
+    var colors = ['#7fb2e8','#5c93d0','#c3ddf8','#cfe3f8','#a8c8f0','#7fd8b8','#ffffff'];
+    confettiBox.innerHTML = '';
+
+    for (var i = 0; i < 200; i++){
+      var p = document.createElement('i');
+      var small = 8 + Math.random() * 10;
+      var r = Math.random();
+
+      if (r < 0.24){                          // 圆点
+        p.className = 'dot';
+        p.style.width = small.toFixed(1) + 'px';
+        p.style.height = small.toFixed(1) + 'px';
+      } else if (r < 0.44){                   // 星星
+        p.className = 'star';
+        p.style.width = (14 + Math.random() * 14).toFixed(1) + 'px';
+        p.style.height = p.style.width;
+      } else if (r < 0.7){                    // 细长纸片
+        p.style.width = (6 + Math.random() * 5).toFixed(1) + 'px';
+        p.style.height = (18 + Math.random() * 20).toFixed(1) + 'px';
+      } else {                                // 小方块
+        p.style.width = small.toFixed(1) + 'px';
+        p.style.height = (small * 1.2).toFixed(1) + 'px';
+      }
+
+      var slow = Math.random() < 0.18;
+      p.style.background = colors[(Math.random() * colors.length) | 0];
+      p.style.setProperty('--spin', ((Math.random() * 1080 - 540) | 0) + 'deg');
+
+      if (slow){
+        p.classList.add('slow');
+        p.style.left = (Math.random() * 106 - 3).toFixed(2) + 'vw';
+        p.style.top = '0';
+        p.style.animationDelay = (Math.random() * 1.8).toFixed(2) + 's';
+        p.style.animationDuration = (5 + Math.random() * 2.6).toFixed(2) + 's';
+        p.style.setProperty('--dx', (Math.random() * 40 - 20).toFixed(1) + 'vw');
+      } else {
+        p.style.animationDelay = (Math.random() * 0.35).toFixed(2) + 's';
+        p.style.animationDuration = (2.8 + Math.random() * 1.8).toFixed(2) + 's';
+        p.style.setProperty('--bx', (Math.random() * 96 - 48).toFixed(1));
+        p.style.setProperty('--by', (Math.random() * 70 - 48).toFixed(1));
+        p.style.setProperty('--dx', (Math.random() * 44 - 22).toFixed(1));
+      }
+
+      confettiBox.appendChild(p);
+    }
+
+    setTimeout(function(){ confettiBox.innerHTML = ''; }, 9800);
+  }
+
+  // 没到纪念日也想看效果：打开 index.html?celebrate=1，或者连点数字五下
+  if (/[?&]celebrate=1/.test(location.search)) fireConfetti();
+
+  (function(){
+    var daysBox = document.querySelector('.days');
+    if (!daysBox) return;
+    var taps = 0, timer = null;
+    daysBox.addEventListener('click', function(){
+      taps++;
+      clearTimeout(timer);
+      timer = setTimeout(function(){ taps = 0; }, 1400);
+      if (taps >= 5){ taps = 0; fireConfetti(); }
+    });
+  })();
+
+  function maybeCelebrate(days){    if (MILESTONES.indexOf(days) < 0) return;
+    try{
+      var key = 'ms' + days;
+      if (localStorage.getItem(key)) return;
+      localStorage.setItem(key, '1');
+    } catch(e){}
+    fireConfetti();
+  }
+
+  function tick(){
+    var days = currentDays();
+
+    if (days !== lastDays){
+      lastDays = days;
+      if (!entered){ entered = true; countUp(days); }
+      else numEl.textContent = days;
+      maybeCelebrate(days);
+    }
+
+    setTimeout(tick, Math.max(1000, bjNextMidnight() - Date.now() + 50));
+  }
+  tick();
+
+  // ---------- 跟着鼠标的柔光 ----------
+  (function(){
+    var glow = document.getElementById('cursorGlow');
+    if (!glow || !window.matchMedia('(pointer:fine)').matches) return;
+
+    var gx = window.innerWidth / 2, gy = window.innerHeight / 2;
+    var tx = gx, ty = gy;
+
+    window.addEventListener('pointermove', function(e){
+      tx = e.clientX; ty = e.clientY;
+    }, { passive: true });
+
+    (function loop(){
+      gx += (tx - gx) * 0.055;
+      gy += (ty - gy) * 0.055;
+      glow.style.transform = 'translate3d(' + gx.toFixed(1) + 'px,' + gy.toFixed(1) + 'px,0)';
+      requestAnimationFrame(loop);
+    })();
+  })();
+
+  // ---------- 花瓣生成（樱花花瓣形状） ----------
+  (function(){
+    var box = document.getElementById('petals');
+    var isSmall = window.innerWidth < 600;
+    var COUNT = isSmall ? 15 : 26;
+
+    // 一片樱花瓣：底端尖，顶端中间凹一个口
+    var D = 'M20 37 C7 31 2 21 4 12 C6 4 15 2 20 9 C25 2 34 4 36 12 C38 21 33 31 20 37 Z';
+
+    function rand(a, b){ return a + Math.random() * (b - a); }
+
+    for (var i = 0; i < COUNT; i++){
+      var p = document.createElement('div');
+      p.className = 'petal';
+
+      var size  = rand(14, 32);
+      var dur   = rand(8, 17);
+      var delay = -rand(0, dur);
+
+      p.style.left  = rand(-10, 90) + 'vw';
+      p.style.width = size + 'px';
+      p.style.height = (size * 1.12) + 'px';
+      p.style.opacity = rand(0.72, 1).toFixed(2);
+      p.style.animationDuration = dur + 's';
+      p.style.animationDelay = delay + 's';
+      p.style.setProperty('--dx', rand(20, 55) + 'vw');
+      p.style.setProperty('--spin', rand(320, 820) + 'deg');
+      p.style.setProperty('--sway', rand(8, 26) + 'px');
+
+      // 远处的糊一点，近处的清楚，层次才像真的
+      if (Math.random() < 0.35) p.style.filter = 'blur(' + rand(0.6, 1.4).toFixed(1) + 'px)';
+
+      p.innerHTML = '<svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">' +
+                    '<path d="' + D + '" fill="url(#petalFill)"/>' +
+                    '</svg>';
+
+      var inner = p.querySelector('svg');
+      inner.style.animationDuration = rand(2.6, 5.2) + 's';
+      inner.style.animationDelay = -rand(0, 5) + 's';
+
+      box.appendChild(p);
+    }
+  })();
+
+  // ---------- 背景里慢慢闪的光点 ----------
+  (function(){
+    var box = document.getElementById('stars');
+    if (!box) return;
+    for (var i = 0; i < 22; i++){
+      var s = document.createElement('i');
+      var size = (2 + Math.random() * 3.4).toFixed(1);
+      s.style.width = size + 'px';
+      s.style.height = size + 'px';
+      s.style.left = (Math.random() * 100).toFixed(2) + '%';
+      s.style.top = (Math.random() * 100).toFixed(2) + '%';
+      s.style.animationDelay = (Math.random() * 5).toFixed(2) + 's';
+      s.style.animationDuration = (3.6 + Math.random() * 3.4).toFixed(2) + 's';
+      box.appendChild(s);
+    }
+  })();
+
+  // ---------- 音乐按钮（现场合成，不加载任何音频文件） ----------
+  (function(){
+    var btn = document.getElementById('musicBtn');
+    if (!btn) return;
+
+    var actx = null, master = null, delay = null, fb = null;
+    var playing = false, timer = null, step = 0;
+
+    // A 小调五声音阶，一格一个八分音符，0 是休止
+    var MELODY = [
+      440.00, 0, 523.25, 0, 659.25, 587.33, 523.25, 0,
+      440.00, 0, 392.00, 0, 329.63, 0, 440.00, 0,
+      523.25, 0, 587.33, 0, 659.25, 783.99, 659.25, 0,
+      587.33, 0, 523.25, 0, 440.00, 0, 0, 0,
+      440.00, 0, 523.25, 0, 659.25, 587.33, 523.25, 0,
+      392.00, 0, 440.00, 0, 523.25, 0, 659.25, 0,
+      587.33, 659.25, 783.99, 0, 659.25, 0, 523.25, 0,
+      440.00, 0, 0, 0, 0, 0, 0, 0
+    ];
+    var BEAT = 375;   // 一格多久，毫秒
+
+    // 每两小节换一次和弦，只铺低音，撑住不空
+    var CHORDS = [
+      [110.00, 164.81],   // Am
+      [87.31, 130.81],    // F
+      [98.00, 146.83],    // G
+      [110.00, 164.81]    // Am
+    ];
+
+    function init(){
+      var AC = window.AudioContext || window.webkitAudioContext;
+      actx = new AC();
+
+      master = actx.createGain();
+      master.gain.value = 0.85;
+
+      var lp = actx.createBiquadFilter();
+      lp.type = 'lowpass';
+      lp.frequency.value = 2400;
+      lp.Q.value = 0.4;
+
+      delay = actx.createDelay(1.0);
+      delay.delayTime.value = 0.28;
+      fb = actx.createGain();
+      fb.gain.value = 0.2;
+
+      master.connect(lp);
+      lp.connect(actx.destination);
+      lp.connect(delay);
+      delay.connect(fb);
+      fb.connect(delay);
+      delay.connect(actx.destination);
+    }
+
+    function note(freq, when, vol, dur, type){
+      var d = dur || 1.5;
+      var o = actx.createOscillator();
+      var g = actx.createGain();
+
+      o.type = type || 'triangle';
+      o.frequency.value = freq;
+
+      g.gain.setValueAtTime(0.0001, when);
+      g.gain.exponentialRampToValueAtTime(vol || 0.15, when + 0.05);
+      g.gain.exponentialRampToValueAtTime(0.0001, when + d);
+
+      o.connect(g);
+      g.connect(master);
+      o.start(when);
+      o.stop(when + d + 0.05);
+    }
+
+    // 和弦铺底，很轻，慢起慢收
+    function pad(freqs, when){
+      for (var i = 0; i < freqs.length; i++){
+        note(freqs[i], when + i * 0.03, 0.045, 3.2, 'sine');
+      }
+    }
+
+    function schedule(){
+      var when = actx.currentTime + 0.08;
+      var f = MELODY[step % MELODY.length];
+
+      if (f > 0){
+        note(f, when, 0.15, 1.5, 'triangle');
+        if (step % 8 === 0) note(f / 2, when, 0.07, 1.9, 'sine');
+      }
+
+      if (step % 16 === 0){
+        pad(CHORDS[Math.floor(step / 16) % CHORDS.length], when);
+      }
+
+      step++;
+    }
+
+    function start(){
+      if (!actx) init();
+      if (actx.state === 'suspended') actx.resume();
+      if (timer) clearInterval(timer);
+      step = 0;
+      schedule();
+      timer = setInterval(schedule, BEAT);
+    }
+
+    function stop(){
+      if (timer){ clearInterval(timer); timer = null; }
+    }
+
+    btn.addEventListener('click', function(){
+      playing = !playing;
+      btn.classList.toggle('on', playing);
+      btn.setAttribute('aria-label', playing ? '停止音乐' : '播放音乐');
+      btn.setAttribute('title', playing ? '停止音乐' : '播放音乐');
+      if (playing) start();
+      else stop();
+    });
+  })();
+  // ---------- 底下露出的三张照片 ----------
+  (function(){
+    var strip = document.getElementById('strip');
+    if (!strip) return;
+
+    var PICK = [1, 3, 6];
+    var exts = {};
+    var pending = PICK.length * 2;
+    var finished = false;
+
+    function finish(){
+      if (finished) return;
+      finished = true;
+
+      var hit = PICK.filter(function(n){ return exts[n]; });
+      if (!hit.length) return;
+
+      hit.forEach(function(n){
+        var a = document.createElement('a');
+        a.href = 'album.html';
+        a.style.setProperty('--r', (Math.random() * 6 - 3).toFixed(2) + 'deg');
+
+        var img = document.createElement('img');
+        img.src = 'photos/' + n + '.' + exts[n];
+        img.alt = '照片 ' + n;
+
+        a.appendChild(img);
+        strip.appendChild(a);
+      });
+
+      strip.hidden = false;
+    }
+
+    function probe(n, ext){
+      var img = new Image();
+      img.onload = function(){ exts[n] = ext; if (--pending === 0) finish(); };
+      img.onerror = function(){ if (--pending === 0) finish(); };
+      img.src = 'photos/' + n + '.' + ext;
+    }
+
+    PICK.forEach(function(n){
+      probe(n, 'jpg');
+      probe(n, 'png');
+    });
+  })();
+
+  // ---------- 中间那句招呼，每次打开随机挑一句 ----------
+  var HELLOS = ['你好呀', '你好啊', '哈喽啊', '嗨'];
+  var hiWord = document.getElementById('hiWord');
+  var hiCy = document.getElementById('hiCy');
+  if (hiWord){
+    var picked = HELLOS[(Math.random() * HELLOS.length) | 0];
+    hiWord.textContent = picked;
+    if (hiCy) hiCy.textContent = '，陈莹';
+  }
+
+  // ---------- 换页：一层柔光盖上来再走 ----------
+  (function(){
+    var veil = document.getElementById('veil');
+    if (!veil) return;
+
+    requestAnimationFrame(function(){
+      requestAnimationFrame(function(){ veil.classList.remove('in'); });
+    });
+    setTimeout(function(){ veil.classList.remove('in'); }, 700);
+
+    document.addEventListener('click', function(e){
+      var a = e.target.closest ? e.target.closest('a[href]') : null;
+      if (!a) return;
+
+      var href = a.getAttribute('href');
+      if (!href || href.charAt(0) === '#' || /^(https?:|mailto:|javascript:)/i.test(href)) return;
+      if (a.target === '_blank') return;
+
+      e.preventDefault();
+      veil.classList.add('in');
+      setTimeout(function(){ location.href = href; }, 380);
+    });
+  })();
+
+</script>
+</body>
+</html>

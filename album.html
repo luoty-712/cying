@@ -1,0 +1,1325 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>回忆相册</title>
+<style>
+  :root{
+    --ink:#1f3a5f;
+    --ink-soft:rgba(31,58,95,.68);
+    --rose:#3b6ea9;
+    --serif:"Songti SC","STSong","Noto Serif SC","Source Han Serif SC",Georgia,"Times New Roman",serif;
+    --sans:"Helvetica Neue",Helvetica,"PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;min-height:100%}
+
+  body{
+    background:
+      radial-gradient(150vmax 110vmax at 50% -30%, #ffffff 0%, #fbfdff 38%, #f3f9ff 72%, #e9f3ff 100%);
+    font-family:var(--sans);
+    color:var(--ink);
+    min-height:100vh;
+    padding:38px 20px 60px;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  .back{
+    position:fixed;left:18px;top:16px;z-index:5;
+    display:flex;align-items:center;justify-content:center;
+    width:40px;height:40px;border-radius:999px;
+    color:var(--ink-soft);
+    text-decoration:none;
+    transition:color .2s ease,background .2s ease;
+  }
+  .back svg{width:25px;height:25px;display:block}
+  .back:hover{color:var(--rose);background:rgba(255,255,255,.8)}
+
+  /* 右上角切换按钮 */
+  .viewToggle{
+    position:fixed;right:30px;top:26px;z-index:5;
+    width:40px;height:40px;border-radius:999px;
+    display:flex;align-items:center;justify-content:center;
+    border:1px solid rgba(110,150,200,.34);
+    background:rgba(255,255,255,.72);
+    color:var(--ink-soft);
+    cursor:pointer;
+    -webkit-backdrop-filter:blur(6px);
+    backdrop-filter:blur(6px);
+    transition:color .22s ease,border-color .22s ease,background .22s ease,transform .22s ease;
+  }
+  .viewToggle:hover{
+    color:var(--rose);
+    background:rgba(255,255,255,.95);
+    border-color:rgba(110,150,200,.62);
+    transform:translateY(-1px);
+  }
+  .viewToggle svg{width:18px;height:18px;display:block}
+  /* 照片墙时显示「列表」图标，时间轴时显示「九宫格」图标 */
+  .viewToggle .ico-grid{display:none}
+  body.view-tl .viewToggle .ico-grid{display:block}
+  body.view-tl .viewToggle .ico-line{display:none}
+  body.view-tl .grid{display:none}
+
+  /* 时间轴视图 */
+  .tl{
+    list-style:none;
+    margin:0 auto;
+    padding:0 0 0 14px;
+    max-width:660px;
+    position:relative;
+  }
+  .tl[hidden]{display:none}
+  .tl::before{
+    content:"";
+    position:absolute;left:14px;top:10px;bottom:26px;width:1px;
+    background:linear-gradient(180deg,
+      rgba(110,150,200,0) 0%,
+      rgba(110,150,200,.42) 10%,
+      rgba(110,150,200,.42) 86%,
+      rgba(110,150,200,0) 100%);
+  }
+  .tl > li{
+    position:relative;
+    padding:0 0 44px 42px;
+  }
+  .tl > li:last-child{padding-bottom:0}
+  .tl > li::before{
+    content:"";
+    position:absolute;left:-4px;top:5px;
+    width:13px;height:13px;border-radius:50%;
+    background:#fff;
+    border:1.5px solid rgba(110,150,200,.75);
+    box-shadow:0 0 0 5px rgba(255,255,255,.92);
+  }
+  .tl .when{
+    font-family:var(--serif);font-size:13px;letter-spacing:.16em;
+    color:rgba(90,125,170,.85);
+    margin-bottom:9px;
+  }
+  .tl h2{
+    margin:0 0 10px;
+    font-family:var(--serif);font-weight:500;
+    font-size:clamp(18px,2.3vmin,22px);
+    letter-spacing:.08em;color:var(--ink);
+  }
+  .tl p{
+    margin:0;
+    font-family:var(--serif);font-size:15px;line-height:1.95;
+    letter-spacing:.04em;color:var(--ink);
+    text-indent:2em;word-break:break-word;
+  }
+  .tl .shot{
+    display:flex;gap:3px;width:118px;margin-top:14px;
+    padding:5px;border-radius:11px;
+    background:#fff;cursor:pointer;
+    box-shadow:0 10px 24px -12px rgba(20,50,90,.45), 0 2px 6px rgba(20,50,90,.12);
+    transform:rotate(-1.2deg);
+    transition:transform .45s cubic-bezier(.2,.8,.2,1), box-shadow .45s ease;
+  }
+  .tl .shot img{width:100%;min-width:0;flex:1 1 0;display:block;border-radius:7px;object-fit:cover}
+  .tl .shot:hover{
+    transform:rotate(0deg) translateY(-3px);
+    box-shadow:0 16px 30px -12px rgba(20,50,90,.5), 0 3px 8px rgba(20,50,90,.14);
+  }
+
+  /* 左侧竖排导航 */
+  .sideBar{
+    position:fixed;
+    left:clamp(12px,2.2vmin,26px);top:50%;transform:translateY(-50%);
+    z-index:4;
+    display:flex;flex-direction:column;gap:11px;
+    padding:12px 11px;
+    border-radius:999px;
+    background:rgba(255,255,255,.5);
+    border:1px solid rgba(110,150,200,.22);
+    -webkit-backdrop-filter:blur(9px);
+    backdrop-filter:blur(9px);
+  }
+  .sItem{
+    width:46px;height:46px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    color:rgba(31,58,95,.58);
+    text-decoration:none;
+    transition:color .2s ease,background .2s ease,transform .2s ease;
+  }
+  .sItem svg{width:23px;height:23px;display:block}
+  .sItem:hover{
+    color:var(--rose);
+    background:rgba(255,255,255,.95);
+    transform:scale(1.04);
+  }
+  .sItem.on{
+    color:var(--rose);
+    background:rgba(255,255,255,.9);
+  }
+
+  @media (max-width:560px){
+    .sideBar{
+      left:50%;top:auto;bottom:clamp(12px,2.6vmin,20px);
+      transform:translateX(-50%);
+      flex-direction:row;
+      padding:9px 10px;
+    }
+    .sItem{width:40px;height:40px}
+    .sItem svg{width:20px;height:20px}
+  }
+
+  h1{
+    margin:0 auto 32px;
+    text-align:center;
+    font-family:var(--serif);font-weight:400;
+    font-size:clamp(19px,2.8vmin,28px);
+    letter-spacing:.34em;text-indent:.34em;
+    color:var(--ink);
+  }
+
+  .grid{
+    display:grid;
+    grid-template-columns:repeat(5,minmax(0,1fr));
+    gap:22px;
+    max-width:860px;
+    margin:0 auto;
+    align-items:stretch;
+    min-width:0;
+  }
+
+  /* 立体相框 */
+  .card{
+    --r:0deg;
+    position:relative;
+    display:block;
+    width:100%;
+    min-width:0;
+    padding:11px;
+    border-radius:5px;
+    background:linear-gradient(150deg,#ffffff 0%,#fafcff 45%,#e6eefb 100%);
+    box-shadow:
+      0 1px 0 rgba(255,255,255,.96) inset,
+      0 -1px 0 rgba(130,155,190,.20) inset,
+      0 0 0 1px rgba(130,155,190,.15),
+      0 3px 0 rgba(190,210,232,.55),
+      0 9px 18px -7px rgba(40,80,130,.34),
+      0 20px 32px -20px rgba(40,80,130,.52);
+    transform:rotate(var(--r)) translateY(0);
+    transition:transform .45s cubic-bezier(.2,.8,.2,1), box-shadow .45s ease;
+    animation:pop .55s cubic-bezier(.2,.8,.2,1) backwards;
+    cursor:pointer;text-decoration:none;color:inherit;
+  }
+  @keyframes pop{
+    from{opacity:0;transform:rotate(var(--r)) translateY(10px) scale(.985)}
+    to  {opacity:1;transform:rotate(var(--r))}
+  }
+  .card:hover{
+    transform:rotate(0deg) translateY(-6px);
+    box-shadow:
+      0 1px 0 rgba(255,255,255,.96) inset,
+      0 -1px 0 rgba(130,155,190,.20) inset,
+      0 0 0 1px rgba(130,155,190,.15),
+      0 4px 0 rgba(190,210,232,.6),
+      0 16px 28px -10px rgba(40,80,130,.4),
+      0 30px 46px -24px rgba(40,80,130,.6);
+    z-index:3;
+  }
+
+  .card .pic{
+    position:relative;
+    display:block;
+    aspect-ratio:3/4;
+    border-radius:2px;
+    background:#f0f6fd;
+    box-shadow:inset 0 0 0 1px rgba(120,150,185,.20), inset 0 3px 9px rgba(40,80,130,.16);
+  }
+  /* 照片本身比相框再歪一点 */
+  .card .photo{
+    position:absolute;inset:0;
+    display:flex;align-items:center;justify-content:center;
+    transform:rotate(var(--pr,0deg)) scale(.9);
+    transition:transform .5s cubic-bezier(.2,.8,.2,1);
+    box-shadow:0 12px 22px -10px rgba(20,50,90,.5), 0 3px 8px rgba(20,50,90,.18);
+  }
+  .card img{
+    max-width:100%;max-height:100%;
+    width:auto;height:auto;
+    object-fit:contain;display:block;
+    background:#fff;
+    border:4px solid #fff;
+    border-radius:2px;
+    box-shadow:0 3px 12px rgba(20,50,90,.22);
+    transition:transform .7s cubic-bezier(.2,.8,.2,1);
+  }
+  .card:hover .photo{transform:rotate(var(--pr,0deg)) scale(.93)}
+
+  /* 两张放进同一个相框 */
+  .card .photo.duo{flex-direction:column;gap:4px}
+  .card .photo.duo img{
+    flex:1 1 0;min-height:0;
+    width:100%;height:auto;max-height:none;
+    object-fit:cover;
+    border:3px solid #fff;
+  }
+
+  .card .cap{
+    height:26px;
+    display:flex;align-items:center;justify-content:center;
+    padding:0 2px;
+    font-family:var(--serif);font-size:12.5px;line-height:1;
+    letter-spacing:.06em;
+    color:rgba(31,58,95,.74);
+    text-align:center;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+    max-width:100%;
+  }
+
+  .empty{
+    max-width:520px;margin:70px auto 0;text-align:center;
+    font-family:var(--serif);font-size:15px;line-height:2;
+    color:var(--ink-soft);letter-spacing:.04em;
+  }
+
+  /* 点开看大图 */
+  .light{
+    position:fixed;inset:0;z-index:50;
+    display:flex;align-items:center;justify-content:center;
+    padding:4vmin;
+    background:rgba(30,50,75,.52);
+    backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+    opacity:0;pointer-events:none;
+    transition:opacity .28s ease;
+  }
+  .light.open{opacity:1;pointer-events:auto}
+
+  /* 日期右边那个「⋯」，管理员才看得见 */
+  .note-head{
+    display:flex;align-items:center;justify-content:space-between;gap:10px;
+    align-self:stretch;
+    margin:0 0 18px 0;
+  }
+  .note-head .note-date{margin-bottom:0}
+  .lightMenu{
+    position:relative;
+    flex:0 0 auto;
+    width:26px;height:26px;padding:0;
+    border-radius:999px;
+    display:flex;align-items:center;justify-content:center;
+    border:1px solid rgba(110,150,200,.3);
+    background:transparent;
+    color:rgba(31,58,95,.5);
+    font-family:var(--serif);font-size:15px;line-height:1;
+    cursor:pointer;
+    transition:color .2s ease,border-color .2s ease,background .2s ease;
+  }
+  .lightMenu[hidden]{display:none}
+  .lightMenu:hover{
+    color:var(--rose);
+    border-color:rgba(110,150,200,.6);
+    background:rgba(255,255,255,.7);
+  }
+  .lightMenu .menuPop{
+    top:calc(100% + 7px);right:0;left:auto;
+  }
+
+  /* 左右翻页 */
+  .nav{
+    position:absolute;top:50%;transform:translateY(-50%);
+    width:44px;height:44px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    padding:0;cursor:pointer;
+    border:1px solid rgba(255,255,255,.45);
+    background:rgba(255,255,255,.18);
+    color:#fff;
+    backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+    transition:background .2s ease, transform .2s ease;
+  }
+  .nav:hover{background:rgba(255,255,255,.34);transform:translateY(-50%) scale(1.06)}
+  .nav:active{transform:translateY(-50%) scale(.96)}
+  .nav svg{width:22px;height:22px;display:block}
+  .nav.prev{left:max(16px,2.6vw)}
+  .nav.next{right:max(16px,2.6vw)}
+
+  .frame{
+    width:min(94vw,880px);max-height:90vh;
+    background:#fdfeff;
+    border-radius:16px;
+    padding:16px;
+    box-shadow:0 40px 80px -30px rgba(10,30,60,.5);
+    transform:translateY(14px) scale(.985);
+    transition:transform .34s cubic-bezier(.2,.8,.2,1);
+    display:flex;flex-direction:row;align-items:stretch;gap:18px;
+    overflow:hidden;
+  }
+  .light.open .frame{transform:none}
+
+  .frame .pic{
+    flex:1 1 auto;min-width:0;
+    display:flex;align-items:center;justify-content:center;gap:8px;
+    border-radius:10px;overflow:hidden;background:#fff;
+  }
+  .frame img{max-width:100%;max-height:76vh;object-fit:contain;display:block;border-radius:4px;min-width:0}
+
+  .note{
+    flex:0 0 340px;
+    display:flex;flex-direction:column;justify-content:flex-start;
+    padding:20px 4px 6px 22px;
+    border-left:1px solid rgba(120,140,165,.16);
+    overflow-y:auto;
+  }
+  .note-date{
+    display:inline-block;
+    padding:5px 13px 4px;
+    border-radius:999px;
+    background:rgba(178,214,245,.32);
+    font-family:var(--serif);
+    font-size:13px;letter-spacing:.14em;
+    color:rgba(45,95,150,.9);
+  }
+  .note-title{
+    margin-bottom:14px;
+    font-family:var(--serif);font-weight:500;
+    font-size:22px;letter-spacing:.1em;
+    color:var(--ink);
+  }
+  .note-title::after{
+    content:"";
+    display:block;
+    width:32px;height:1px;
+    margin-top:13px;
+    background:rgba(110,150,200,.55);
+  }
+  .note-title:empty{display:none}
+  .note-text{
+    font-family:var(--serif);font-size:15px;line-height:2.05;
+    letter-spacing:.04em;color:var(--ink);
+    text-indent:2em;
+    word-break:break-word;white-space:pre-wrap;
+  }
+
+  @media (max-width:1100px){
+    .grid{grid-template-columns:repeat(4,minmax(0,1fr))}
+  }
+
+  @media (max-width:560px){
+    body{padding:52px 14px 96px}
+    .grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+    .card{padding:6px}
+    .frame{flex-direction:column;gap:12px;padding:12px}
+    .frame .note{flex:0 0 auto;border-left:0;border-top:1px solid rgba(120,140,165,.16);padding:16px 4px 4px}
+    .frame img{max-height:54vh}
+    .nav{top:auto;bottom:18px;transform:none}
+    .nav:hover{transform:scale(1.06)}
+    .nav.prev{left:calc(50% - 58px)}
+    .nav.next{right:calc(50% - 58px)}
+  }
+
+  @media (prefers-reduced-motion:reduce){
+    .card,.light,.frame{animation:none;transition:none}
+    .card img{transition:none}
+  }
+  /* 换页时盖上来的一层柔光 */
+  #veil{
+    position:fixed;inset:0;z-index:60;
+    pointer-events:none;
+    opacity:0;
+    background:rgba(240,248,255,.55);
+    -webkit-backdrop-filter:blur(0px) saturate(1);
+    backdrop-filter:blur(0px) saturate(1);
+    transition:opacity .46s cubic-bezier(.65,0,.35,1), -webkit-backdrop-filter .46s cubic-bezier(.65,0,.35,1), backdrop-filter .46s cubic-bezier(.65,0,.35,1);
+  }
+  #veil.in{
+    opacity:1;
+    pointer-events:auto;
+    -webkit-backdrop-filter:blur(14px) saturate(1.08);
+    backdrop-filter:blur(14px) saturate(1.08);
+  }
+
+  @media (prefers-reduced-motion:reduce){
+    #veil{transition:none}
+  }
+  /* ---------- 管理 ---------- */
+  .adminBtn{
+    position:fixed;right:30px;top:78px;z-index:6;
+    height:40px;padding:0 18px;border-radius:999px;
+    border:1px solid rgba(110,150,200,.34);
+    background:rgba(255,255,255,.72);
+    color:var(--ink-soft);
+    font-family:var(--serif);font-size:13px;
+    letter-spacing:.2em;text-indent:.2em;
+    cursor:pointer;
+    -webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);
+  }
+  .adminBtn:hover{color:var(--rose);background:rgba(255,255,255,.95);border-color:rgba(110,150,200,.6)}
+  .adminBtn[hidden]{display:none}
+  .adminBtn.out{top:128px;height:34px;padding:0 15px;font-size:12px;letter-spacing:.16em;text-indent:.16em}
+
+  /* ---------- 末尾的添加框 ---------- */
+  .addCard{
+    position:relative;
+    display:flex;flex-direction:column;
+    width:100%;min-height:100%;
+    padding:11px;
+    border-radius:16px;
+    border:none;
+    background:linear-gradient(150deg,#ffffff,#fafcff 45%,#e9f2fd);
+    cursor:pointer;
+    transform:rotate(var(--r,0deg));
+    animation:addPop .55s cubic-bezier(.2,.8,.2,1) backwards;
+    box-shadow:
+      0 0 0 1px rgba(150,180,220,.28),
+      0 1px 2px rgba(120,150,190,.18),
+      0 14px 28px -16px rgba(70,110,160,.5),
+      0 4px 10px -6px rgba(70,110,160,.28);
+    transition:transform .32s cubic-bezier(.2,.8,.2,1),box-shadow .32s ease;
+  }
+  .addCard .inner{
+    flex:1;
+    display:flex;align-items:center;justify-content:center;
+    border-radius:4px;
+    background:rgba(234,243,254,.92);
+    box-shadow:inset 0 0 0 1px rgba(150,180,220,.22), inset 0 3px 9px rgba(110,150,200,.12);
+  }
+  .addCard .plus{
+    display:flex;align-items:center;justify-content:center;
+    width:54px;height:54px;border-radius:50%;
+    background:#fff;
+    color:rgba(59,110,169,.8);
+    box-shadow:0 3px 10px rgba(70,110,160,.2), 0 0 0 1px rgba(110,150,200,.16);
+    transition:transform .26s cubic-bezier(.2,.8,.2,1),box-shadow .26s ease,color .2s ease;
+  }
+  .addCard svg{width:24px;height:24px;display:block}
+  .addCard:hover{
+    transform:rotate(var(--r,0deg)) translateY(-3px);
+    box-shadow:
+      0 0 0 1px rgba(110,150,200,.42),
+      0 1px 2px rgba(120,150,190,.2),
+      0 20px 36px -16px rgba(70,110,160,.55),
+      0 6px 14px -6px rgba(70,110,160,.32);
+  }
+  .addCard:hover .plus{
+    transform:scale(1.07);
+    color:#2f6098;
+    box-shadow:0 8px 20px rgba(70,110,160,.28), 0 0 0 1px rgba(59,110,169,.34);
+  }
+  .addCard:active{transform:rotate(var(--r,0deg)) translateY(-1px)}
+  @keyframes addPop{
+    from{opacity:0;transform:rotate(var(--r,0deg)) translateY(10px) scale(.985)}
+    to  {opacity:1;transform:rotate(var(--r,0deg))}
+  }
+
+  .modal{
+    position:fixed;inset:0;z-index:70;
+    display:flex;align-items:center;justify-content:center;
+    background:rgba(232,241,252,.7);
+    -webkit-backdrop-filter:blur(9px);backdrop-filter:blur(9px);
+  }
+  .modal[hidden]{display:none}
+  .modalBox{
+    width:min(92vw,440px);
+    max-height:86vh;overflow:auto;
+    padding:34px 30px 24px;
+    border-radius:20px;
+    background:rgba(255,255,255,.88);
+    -webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);
+    box-shadow:0 26px 64px -22px rgba(20,48,79,.34), 0 0 0 1px rgba(110,150,200,.16);
+  }
+  .modalBox h3{
+    position:relative;
+    font-family:var(--serif);font-weight:500;
+    font-size:21px;letter-spacing:.34em;text-indent:.34em;
+    color:var(--ink);margin-bottom:26px;text-align:center;
+  }
+  .modalBox h3::before{
+    content:"";position:absolute;left:50%;top:-13px;
+    width:26px;height:1px;margin-left:-13px;
+    background:rgba(110,150,200,.42);
+  }
+  .modalBox label{display:block;font-size:12.5px;letter-spacing:.16em;color:rgba(31,58,95,.55);margin:0 0 7px 3px}
+  .modalBox input,.modalBox textarea{
+    display:block;width:100%;
+    border:1px solid rgba(110,150,200,.22);
+    background:rgba(240,247,255,.75);
+    border-radius:12px;
+    font-family:var(--serif);font-size:14.5px;color:var(--ink);
+    outline:none;
+    transition:border-color .2s ease,background .2s ease,box-shadow .2s ease;
+  }
+  .modalBox input{height:46px;margin-bottom:13px;padding:0 15px}
+  .modalBox textarea{min-height:94px;margin-bottom:13px;padding:11px 15px;line-height:1.85;resize:vertical}
+  .modalBox input::placeholder,.modalBox textarea::placeholder{color:rgba(31,58,95,.32)}
+  .modalBox input:focus,.modalBox textarea:focus{
+    border-color:rgba(59,110,169,.55);
+    background:#fff;
+    box-shadow:0 0 0 3px rgba(59,110,169,.1);
+  }
+  .modalBox input[type=file]{height:auto;padding:11px 14px;font-size:13px;color:var(--ink-soft)}
+  .modalBox .err{min-height:18px;font-size:12.5px;color:#b4485f;letter-spacing:.03em;margin:4px 0 8px}
+  .modalFoot{display:flex;justify-content:flex-end;gap:12px;margin-top:6px}
+  .modalFoot button{
+    height:40px;padding:0 24px;border-radius:999px;cursor:pointer;
+    font-family:var(--serif);font-size:13.5px;
+    letter-spacing:.2em;text-indent:.2em;
+    transition:transform .18s ease,box-shadow .2s ease,background .2s ease;
+  }
+  .modalFoot .ghost{background:transparent;border:1px solid rgba(110,150,200,.3);color:var(--ink-soft)}
+  .modalFoot .ghost:hover{background:rgba(240,247,255,.9)}
+  .modalFoot .primary{
+    background:linear-gradient(135deg,#4d81b8,#2f6098);
+    border:none;color:#fff;
+    box-shadow:0 8px 18px -8px rgba(47,96,152,.6);
+  }
+  .modalFoot .primary:hover{transform:translateY(-1px);box-shadow:0 12px 22px -8px rgba(47,96,152,.7)}
+  .modalFoot .primary:disabled{opacity:.55;cursor:default;transform:none;box-shadow:none}
+
+  .modal:not([hidden]) .modalBox{
+    animation:mdIn .34s cubic-bezier(.2,.7,.2,1) both;
+  }
+  @keyframes mdIn{
+    from{opacity:0;transform:translateY(12px) scale(.965)}
+    to{opacity:1;transform:none}
+  }
+
+  .cardMenu{
+    position:absolute;right:9px;top:9px;z-index:3;
+    width:26px;height:26px;border-radius:999px;
+    display:flex;align-items:center;justify-content:center;
+    background:rgba(255,255,255,.94);
+    border:1px solid rgba(110,150,200,.32);
+    color:var(--ink-soft);font-size:15px;line-height:1;
+    cursor:pointer;letter-spacing:0;
+  }
+  .cardMenu:hover{color:var(--rose)}
+
+  .menuPop{
+    position:absolute;right:9px;top:40px;z-index:4;
+    display:flex;flex-direction:column;
+    background:#fff;border-radius:10px;
+    border:1px solid rgba(110,150,200,.24);
+    box-shadow:0 10px 26px -12px rgba(20,48,79,.4);
+    overflow:hidden;
+  }
+  .menuPop button{
+    width:92px;height:34px;
+    background:transparent;border:none;cursor:pointer;
+    font-family:var(--serif);font-size:13px;
+    letter-spacing:.1em;color:var(--ink-soft);
+  }
+  .menuPop button:hover{background:rgba(236,244,253,.9);color:var(--rose)}
+
+</style>
+</head>
+<body>
+
+<a class="back" href="index.html" aria-label="回到主页">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 5.5 L7.5 12 L14.5 18.5"/></svg>
+</a>
+
+<button class="viewToggle" id="viewToggle" aria-label="切换成时间轴">
+  <svg class="ico-grid" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <rect x="3.5" y="3.5" width="7" height="7" rx="1.4"/>
+    <rect x="13.5" y="3.5" width="7" height="7" rx="1.4"/>
+    <rect x="3.5" y="13.5" width="7" height="7" rx="1.4"/>
+    <rect x="13.5" y="13.5" width="7" height="7" rx="1.4"/>
+  </svg>
+  <svg class="ico-line" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <path d="M7 4v16"/>
+    <circle cx="7" cy="7" r="1.7"/>
+    <circle cx="7" cy="12" r="1.7"/>
+    <circle cx="7" cy="17" r="1.7"/>
+    <path d="M12 7h7M12 12h7M12 17h5"/>
+  </svg>
+</button>
+
+<nav class="sideBar" aria-label="页面导航">
+  <a class="sItem" href="index.html" title="主页" aria-label="主页">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M4 10.6 12 4l8 6.6V19a1 1 0 0 1-1 1h-4v-5.2H9V20H5a1 1 0 0 1-1-1z"/>
+    </svg>
+  </a>
+  <a class="sItem on" href="album.html" title="相册" aria-label="相册" id="navAlbum">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <rect x="3.5" y="5" width="17" height="14" rx="2.2"/>
+      <circle cx="9" cy="10" r="1.6"/>
+      <path d="M4.5 17.2 9.6 12.6l3 2.9 3-2.6 3.9 3.7"/>
+    </svg>
+  </a>
+  <a class="sItem" href="album.html?view=tl" title="时间轴" aria-label="时间轴" id="navTl">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M7 4.5v15"/>
+      <circle cx="7" cy="7" r="1.6"/>
+      <circle cx="7" cy="12" r="1.6"/>
+      <circle cx="7" cy="17" r="1.6"/>
+      <path d="M12 7h7M12 12h7M12 17h5"/>
+    </svg>
+  </a>
+  <a class="sItem" href="message.html" title="留言" aria-label="留言">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M20 12.4c0 3.6-3.6 6.5-8 6.5-.9 0-1.8-.1-2.6-.3L5 20l.9-3.2C4.7 15.6 4 14 4 12.4 4 8.8 7.6 6 12 6s8 2.8 8 6.4z"/>
+    </svg>
+  </a>
+</nav>
+
+<h1>回忆相册</h1>
+
+<div class="grid" id="grid"></div>
+<ol class="tl" id="tl" hidden></ol>
+<div class="empty" id="empty" hidden>还没有照片，往 photos 文件夹里放，按 1.jpg 开始编号</div>
+
+<div class="light" id="light">
+  <div class="frame" role="dialog" aria-modal="true" aria-label="照片详情">
+    <div class="pic" id="bigPic"></div>
+    <div class="note" id="noteWrap" hidden>
+      <div class="note-head">
+        <span class="note-date" id="noteDate"></span>
+        <button class="lightMenu" id="lightMenu" type="button" aria-label="编辑这张" hidden>&#8943;</button>
+      </div>
+      <div class="note-title" id="noteTitle"></div>
+      <div class="note-text" id="noteText"></div>
+    </div>
+  </div>
+  <button class="nav prev" id="navPrev" aria-label="上一张">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 5.5 L8 12 L14.5 18.5"/></svg>
+  </button>
+  <button class="nav next" id="navNext" aria-label="下一张">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.5 5.5 L16 12 L9.5 18.5"/></svg>
+  </button>
+</div>
+
+
+
+<div class="modal" id="loginModal" hidden>
+  <div class="modalBox">
+    <h3>登录</h3>
+    <input id="lgUser" placeholder="账号" autocomplete="username">
+    <input id="lgPass" type="password" placeholder="密码" autocomplete="current-password">
+    <p class="err" id="lgErr"></p>
+    <div class="modalFoot">
+      <button class="ghost" id="lgCancel" type="button">取消</button>
+      <button class="primary" id="lgOk" type="button">登录</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="editModal" hidden>
+  <div class="modalBox">
+    <h3 id="edTitle">添加照片</h3>
+    <input type="file" id="edFile" accept="image/*">
+    <input id="edDate" placeholder="日期，像 2026.10.06">
+    <input id="edTtl" placeholder="标题">
+    <textarea id="edNote" placeholder="正文"></textarea>
+    <p class="err" id="edErr"></p>
+    <div class="modalFoot">
+      <button class="ghost" id="edCancel" type="button">取消</button>
+      <button class="primary" id="edOk" type="button">保存</button>
+    </div>
+  </div>
+</div>
+
+<div id="veil" class="in" aria-hidden="true"></div>
+
+<script>
+(function(){
+  // ---------- 数据：从 Supabase 读 ----------
+  var SB_URL = 'https://fnbdofawqxkrsmrvkzbu.supabase.co';
+  var SB_KEY = 'sb_publishable_wYr9TdOdT2aIPP7jeiLZzw_lxuhkSJm';
+
+  var RECORDS = [];   // 库里所有记录
+  var ALL = [];       // 屏幕上排好的顺序，一组只算一条
+  var CUR = null;     // 正在看的那一组
+
+  var bigPic = document.getElementById('bigPic');
+
+  // 把 2026.10.6 这种日期变成能比大小的数字
+  function dateKey(str){
+    var m = String(str || '').match(/(\d{4})\D+(\d{1,2})\D+(\d{1,2})/);
+    if (!m) return 99999999;
+    return (+m[1]) * 10000 + (+m[2]) * 100 + (+m[3]);
+  }
+
+  // 算出星期几
+  function weekOf(str){
+    var m = String(str || '').match(/(\d{4})\D+(\d{1,2})\D+(\d{1,2})/);
+    if (!m) return '';
+    var d = new Date(+m[1], +m[2] - 1, +m[3]);
+    return '星期' + '日一二三四五六'.charAt(d.getDay());
+  }
+
+  function photoSrc(p){
+    if (!p) return '';
+    return /^https?:/i.test(p) ? p : p;
+  }
+
+  // 同 pair_key 的两张并进一个相框
+  function groupOf(rec){
+    if (!rec || !rec.pair_key) return rec ? [rec] : [];
+    return RECORDS.filter(function(r){ return r.pair_key === rec.pair_key; });
+  }
+
+  function isSlave(rec){
+    if (!rec || !rec.pair_key) return false;
+    var g = RECORDS.filter(function(r){ return r.pair_key === rec.pair_key; });
+    return g.length > 1 && g[0].id !== rec.id;
+  }
+
+  // ---------- 读库 ----------
+  function load(){
+    if (empty){
+      empty.hidden = false;
+      empty.textContent = '载入中…';
+    }
+    fetch(SB_URL + '/rest/v1/photos?select=*&order=sort_key.asc,id.asc', {
+      headers: { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY }
+    }).then(function(r){
+      if (!r.ok) throw new Error('read fail');
+      return r.json();
+    }).then(function(rows){
+      RECORDS = rows || [];
+      var list = RECORDS.filter(function(r){ return !isSlave(r); });
+      if (!list.length){
+        empty.hidden = false;
+        empty.textContent = '还没有照片，点末尾那个加号加一张';
+        return;
+      }
+      empty.hidden = true;
+      render(list);
+      if (typeof ADMIN !== "undefined" && ADMIN) refreshAdminUI();
+    }).catch(function(){
+      empty.hidden = false;
+      empty.textContent = '相册没加载出来，刷新试试';
+    });
+  }
+
+  // ---------- 摊照片 ----------
+  function render(list){
+    ALL = list.slice();
+    grid.innerHTML = '';
+
+    list.forEach(function(rec, idx){
+      var group = groupOf(rec);
+
+      var a = document.createElement('a');
+      a.className = 'card';
+      a.href = 'javascript:void(0)';
+      a.setAttribute('data-id', rec.id);
+      a.style.animationDelay = (idx * 55) + 'ms';
+      a.style.setProperty('--r', (Math.random() * 4 - 2).toFixed(2) + 'deg');
+
+      var cap = document.createElement('div');
+      cap.className = 'cap';
+      cap.textContent = rec.title || '';
+
+      var pic = document.createElement('div');
+      pic.className = 'pic';
+
+      var photo = document.createElement('div');
+      photo.className = 'photo';
+      photo.style.setProperty('--pr', (Math.random() * 8 - 4).toFixed(2) + 'deg');
+
+      if (group.length > 1){
+        photo.classList.add('duo');
+        group.forEach(function(g){
+          var im = document.createElement('img');
+          im.src = photoSrc(g.image_path);
+          im.alt = rec.title || '照片';
+          im.loading = 'lazy';
+          photo.appendChild(im);
+        });
+      } else {
+        var img = document.createElement('img');
+        img.src = photoSrc(rec.image_path);
+        img.alt = rec.title || '照片';
+        img.loading = 'lazy';
+        photo.appendChild(img);
+      }
+
+      pic.appendChild(photo);
+      a.appendChild(pic);
+      a.appendChild(cap);
+      a.addEventListener('click', function(){ open(rec); });
+      grid.appendChild(a);
+    });
+
+    ensureAddCard(list.length);
+
+    buildTimeline(list);
+  }
+
+  // 末尾那个「加照片」的相框：登录了才有
+  function ensureAddCard(idx){
+    var old = grid.querySelector('.addCard');
+    if (!getAuth()){
+      if (old) old.remove();
+      return;
+    }
+    if (old) return;
+    var add = document.createElement('button');
+    add.className = 'addCard';
+    add.type = 'button';
+    add.setAttribute('aria-label', '添加照片');
+    add.style.setProperty('--r', (Math.random() * 4 - 2).toFixed(2) + 'deg');
+    add.style.animationDelay = ((idx || 0) * 55) + 'ms';
+    add.innerHTML = '<div class="inner"><span class="plus"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M12 6v12M6 12h12"/></svg></span></div>';
+    add.addEventListener('click', function(){ showEdit(null); });
+    grid.appendChild(add);
+  }
+
+  // ---------- 时间轴那一种排法 ----------
+  function buildTimeline(list){
+    tl.innerHTML = '';
+
+    list.forEach(function(rec){
+      var li = document.createElement('li');
+
+      var when = document.createElement('div');
+      when.className = 'when';
+      when.textContent = rec.date ? (rec.date + ' ' + weekOf(rec.date)) : '';
+      li.appendChild(when);
+
+      if (rec.title){
+        var h2 = document.createElement('h2');
+        h2.textContent = rec.title;
+        li.appendChild(h2);
+      }
+
+      if (rec.note){
+        var p = document.createElement('p');
+        p.textContent = rec.note;
+        li.appendChild(p);
+      }
+
+      var shot = document.createElement('span');
+      shot.className = 'shot';
+
+      groupOf(rec).forEach(function(g){
+        var img = document.createElement('img');
+        img.src = photoSrc(g.image_path);
+        img.alt = rec.title || '照片';
+        img.loading = 'lazy';
+        shot.appendChild(img);
+      });
+
+      shot.addEventListener('click', function(){ open(rec); });
+      li.appendChild(shot);
+
+      tl.appendChild(li);
+    });
+  }
+
+  // ---------- 关掉 / 打开 ----------
+  function open(rec){
+    if (!rec) return;
+    CUR = rec;
+
+    bigPic.innerHTML = '';
+    groupOf(rec).forEach(function(g){
+      var im = document.createElement('img');
+      im.src = photoSrc(g.image_path);
+      im.alt = rec.title || '照片';
+      bigPic.appendChild(im);
+    });
+
+    var t = String(rec.note || '').trim();
+    noteText.textContent = t;
+    noteDate.textContent = rec.date ? (rec.date + ' ' + weekOf(rec.date)) : '';
+    noteTitle.textContent = rec.title || '';
+    noteWrap.hidden = !t;
+
+    light.classList.add('open');
+    if (lightMenu){
+      lightMenu.hidden = !getAuth();
+      if (!lightMenu._bound){
+        lightMenu._bound = true;
+        lightMenu.addEventListener('click', function(e){
+          e.preventDefault();
+          e.stopPropagation();
+          if (CUR) openCardMenu(lightMenu, CUR.id);
+        });
+      }
+    }
+  }
+
+  function step(dir){
+    if (!ALL.length) return;
+    var i = 0;
+    for (var k = 0; k < ALL.length; k++){
+      if (CUR && ALL[k].id === CUR.id){ i = k; break; }
+    }
+    i = (i + dir + ALL.length) % ALL.length;
+    open(ALL[i]);
+  }
+
+  function close(){
+    light.classList.remove('open');
+    if (lightMenu) lightMenu.hidden = true;
+    closeMenus();
+  }
+
+  light.addEventListener('click', function(e){
+    if (e.target === light) close();
+  });
+
+  document.getElementById('navPrev').addEventListener('click', function(e){
+    e.stopPropagation(); step(-1);
+  });
+  document.getElementById('navNext').addEventListener('click', function(e){
+    e.stopPropagation(); step(1);
+  });
+
+  document.addEventListener('keydown', function(e){
+    if (!light.classList.contains('open')) return;
+    if (e.key === 'Escape') close();
+    else if (e.key === 'ArrowLeft') step(-1);
+    else if (e.key === 'ArrowRight') step(1);
+  });
+
+  // ---------- 管理：登录 / 上传 / 改 / 删 ----------
+  var ADMIN = /[?&#]admin\b/.test(location.search + location.hash);
+  var AUTH_KEY = 'dt_admin_auth';
+
+  var loginModal = document.getElementById('loginModal');
+  var lightMenu  = document.getElementById('lightMenu');
+  var editModal  = document.getElementById('editModal');
+  var lgUser = document.getElementById('lgUser');
+  var lgPass = document.getElementById('lgPass');
+  var lgErr  = document.getElementById('lgErr');
+  var edTitleBox = document.getElementById('edTitle');
+  var edFile = document.getElementById('edFile');
+  var edDate = document.getElementById('edDate');
+  var edTtl  = document.getElementById('edTtl');
+  var edNote = document.getElementById('edNote');
+  var edErr  = document.getElementById('edErr');
+  var editing = null;
+
+  function getAuth(){
+    try { return JSON.parse(localStorage.getItem(AUTH_KEY) || 'null'); } catch (e){ return null; }
+  }
+  function setAuth(o){ try { localStorage.setItem(AUTH_KEY, JSON.stringify(o)); } catch (e){} }
+  function clearAuth(){ try { localStorage.removeItem(AUTH_KEY); } catch (e){} }
+
+  function signIn(user, pass){
+    var email = String(user).indexOf('@') >= 0 ? user : (String(user) + '@cy.local');
+    return fetch(SB_URL + '/auth/v1/token?grant_type=password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', apikey: SB_KEY },
+      body: JSON.stringify({ email: email, password: pass })
+    }).then(function(r){
+      return r.json().catch(function(){ return {}; }).then(function(j){
+        if (!r.ok){
+          if (j.error_code === 'invalid_credentials' || j.error === 'invalid_grant') throw new Error('账号或密码不对');
+          throw new Error(j.msg || '登录失败，等下再试');
+        }
+        setAuth({ access: j.access_token, refresh: j.refresh_token, exp: Date.now() + (j.expires_in || 3600) * 1000 });
+      });
+    });
+  }
+
+  function token(){
+    var a = getAuth();
+    if (!a) return Promise.resolve(null);
+    if (Date.now() < (a.exp || 0) - 60000) return Promise.resolve(a.access);
+
+    return fetch(SB_URL + '/auth/v1/token?grant_type=refresh_token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', apikey: SB_KEY },
+      body: JSON.stringify({ refresh_token: a.refresh })
+    }).then(function(r){
+      if (!r.ok){ clearAuth(); return null; }
+      return r.json().then(function(j){
+        setAuth({ access: j.access_token, refresh: j.refresh_token, exp: Date.now() + (j.expires_in || 3600) * 1000 });
+        return j.access_token;
+      });
+    });
+  }
+
+  function upload(file){
+    return token().then(function(tk){
+      if (!tk) throw new Error('请先登录');
+
+      var ext = (String(file.name).split('.').pop() || 'jpg').toLowerCase();
+      if (!/^(jpg|jpeg|png|webp|gif)$/.test(ext)) ext = 'jpg';
+      var name = Date.now().toString(36) + Math.random().toString(36).slice(2, 8) + '.' + ext;
+
+      return fetch(SB_URL + '/storage/v1/object/photos/' + name, {
+        method: 'POST',
+        headers: {
+          apikey: SB_KEY,
+          Authorization: 'Bearer ' + tk,
+          'Content-Type': file.type || 'image/jpeg',
+          'x-upsert': 'true'
+        },
+        body: file
+      }).then(function(r){
+        if (!r.ok) throw new Error('图片没传上去');
+        return SB_URL + '/storage/v1/object/public/photos/' + name;
+      });
+    });
+  }
+
+  function api(method, path, body, extra){
+    return token().then(function(tk){
+      if (!tk) throw new Error('请先登录');
+
+      var h = { apikey: SB_KEY, Authorization: 'Bearer ' + tk, 'Content-Type': 'application/json' };
+      if (extra) for (var k in extra) h[k] = extra[k];
+
+      return fetch(SB_URL + path, {
+        method: method,
+        headers: h,
+        body: body ? JSON.stringify(body) : undefined
+      }).then(function(r){
+        if (r.ok) return r;
+        return r.text().then(function(t){
+          throw new Error(String(t || '').slice(0, 100) || '操作失败');
+        });
+      });
+    });
+  }
+
+  function nextSortKey(date){
+    var base = dateKey(date) * 100;
+    var max = 0;
+    RECORDS.forEach(function(r){
+      var v = r.sort_key || 0;
+      if (v > base && v < base + 100) max = Math.max(max, v - base);
+    });
+    return base + Math.min(99, max + 1);
+  }
+
+  function addMenu(card){
+    var id = +card.getAttribute('data-id');
+    var b = document.createElement('button');
+    b.className = 'cardMenu';
+    b.type = 'button';
+    b.textContent = '\u22ef';
+    b.addEventListener('click', function(e){
+      e.preventDefault();
+      e.stopPropagation();
+      openCardMenu(card, id);
+    });
+    card.appendChild(b);
+  }
+
+  function refreshAdminUI(){
+    var on = !!getAuth();
+    if (!on){
+      var oldAdd = grid.querySelector('.addCard');
+      if (oldAdd) oldAdd.remove();
+    }
+    Array.prototype.forEach.call(grid.querySelectorAll('.card'), function(card){
+      if (on){
+        if (!card.querySelector('.cardMenu')) addMenu(card);
+      } else {
+        var m = card.querySelector('.cardMenu');
+        if (m) m.remove();
+        var p = card.querySelector('.menuPop');
+        if (p) p.remove();
+      }
+    });
+  }
+
+  function closeMenus(){
+    var m = document.querySelector('.menuPop');
+    if (m) m.remove();
+  }
+
+  function openCardMenu(card, id){
+    closeMenus();
+
+    var rec = null;
+    RECORDS.forEach(function(r){ if (r.id === id) rec = r; });
+    if (!rec) return;
+
+    var box = document.createElement('div');
+    box.className = 'menuPop';
+
+    var e1 = document.createElement('button');
+    e1.type = 'button';
+    e1.textContent = '编辑';
+    e1.addEventListener('click', function(ev){
+      ev.stopPropagation();
+      box.remove();
+      showEdit(rec);
+    });
+
+    var e2 = document.createElement('button');
+    e2.type = 'button';
+    e2.textContent = '删除';
+    e2.addEventListener('click', function(ev){
+      ev.stopPropagation();
+      box.remove();
+      if (confirm('删掉这张？删了就没了')) removeRec(rec);
+    });
+
+    box.appendChild(e1);
+    box.appendChild(e2);
+    card.appendChild(box);
+  }
+
+  function showLogin(){
+    lgErr.textContent = '';
+    lgUser.value = '';
+    lgPass.value = '';
+    loginModal.hidden = false;
+    setTimeout(function(){ lgUser.focus(); }, 80);
+  }
+
+  function showEdit(rec){
+    editing = rec || null;
+    edTitleBox.textContent = rec ? '编辑这张' : '添加照片';
+    edFile.value = '';
+    edDate.value = rec ? (rec.date || '') : '';
+    edTtl.value = rec ? (rec.title || '') : '';
+    edNote.value = rec ? (rec.note || '') : '';
+    edErr.textContent = '';
+    editModal.hidden = false;
+  }
+
+  function removeRec(rec){
+    api('DELETE', '/rest/v1/photos?id=eq.' + rec.id, null, { Prefer: 'return=minimal' })
+      .then(function(){
+        if (light.classList.contains('open')) close();
+        load();
+        setTimeout(refreshAdminUI, 600);
+      })
+      .catch(function(e){ alert('没删掉：' + e.message); });
+  }
+
+  function saveEdit(){
+    var file = edFile.files && edFile.files[0];
+    var d = edDate.value.trim();
+    var t = edTtl.value.trim();
+    var n = edNote.value.trim();
+
+    if (!editing && !file){ edErr.textContent = '选一张照片'; return; }
+    if (!d){ edErr.textContent = '写个日期'; return; }
+
+    var btn = document.getElementById('edOk');
+    btn.disabled = true;
+    edErr.textContent = '';
+
+    var job;
+
+    if (editing){
+      job = (file ? upload(file) : Promise.resolve(null)).then(function(url){
+        var patch = { date: d, title: t, note: n, sort_key: nextSortKey(d) };
+        if (url) patch.image_path = url;
+        return api('PATCH', '/rest/v1/photos?id=eq.' + editing.id, patch, { Prefer: 'return=minimal' });
+      });
+    } else {
+      job = upload(file).then(function(url){
+        return api('POST', '/rest/v1/photos', {
+          date: d, title: t, note: n, image_path: url, sort_key: nextSortKey(d)
+        }, { Prefer: 'return=minimal' });
+      });
+    }
+
+    job.then(function(){
+      editModal.hidden = true;
+      load();
+      setTimeout(refreshAdminUI, 600);
+    }).catch(function(e){
+      edErr.textContent = e.message || '没成功';
+    }).then(function(){
+      btn.disabled = false;
+    });
+  }
+
+  document.getElementById('lgOk').addEventListener('click', function(){
+    var btn = this;
+    var u = lgUser.value.trim();
+    var p = lgPass.value;
+    if (!u || !p){ lgErr.textContent = '账号和密码都要填'; return; }
+
+    btn.disabled = true;
+    lgErr.textContent = '';
+
+    signIn(u, p).then(function(){
+      loginModal.hidden = true;
+      refreshAdminUI();
+    }).catch(function(e){
+      lgErr.textContent = e.message || '登录失败';
+    }).then(function(){
+      btn.disabled = false;
+    });
+  });
+
+  lgPass.addEventListener('keydown', function(e){
+    if (e.key === 'Enter') document.getElementById('lgOk').click();
+  });
+
+  document.getElementById('lgCancel').addEventListener('click', function(){ loginModal.hidden = true; });
+  document.getElementById('edCancel').addEventListener('click', function(){ editModal.hidden = true; });
+  document.getElementById('edOk').addEventListener('click', saveEdit);
+
+  document.addEventListener('click', function(e){
+    if (!e.target.closest) return;
+    if (!e.target.closest('.cardMenu') && !e.target.closest('.menuPop')) closeMenus();
+  });
+
+  refreshAdminUI();
+
+  // 别的标签页登录/退出，这边跟着变
+  window.addEventListener('storage', function(e){
+    if (!e.key || e.key === AUTH_KEY) refreshAdminUI();
+  });
+
+  load();
+
+  // ---------- 切换：照片墙 / 时间轴 ----------
+  var navAlbum = document.getElementById('navAlbum');
+  var navTl = document.getElementById('navTl');
+
+  function syncNav(on){
+    if (navAlbum) navAlbum.classList.toggle('on', !on);
+    if (navTl) navTl.classList.toggle('on', on);
+  }
+
+  // 在时间轴视图里，返回箭头指回照片墙
+  var backLink = document.querySelector('.back');
+  function syncBack(on){
+    if (backLink) backLink.setAttribute('href', on ? 'album.html' : 'index.html');
+  }
+
+  if (/[?&]view=tl\b/.test(location.search)){
+    document.body.classList.add('view-tl');
+    tl.hidden = false;
+    syncNav(true);
+    syncBack(true);
+  }
+
+  var viewToggle = document.getElementById('viewToggle');
+  if (viewToggle){
+    viewToggle.addEventListener('click', function(){
+      var on = document.body.classList.toggle('view-tl');
+      tl.hidden = !on;
+      syncNav(on);
+      syncBack(on);
+      viewToggle.setAttribute('aria-label', on ? '切回照片墙' : '切换成时间轴');
+    });
+  }
+  // ---------- 换页：一层柔光盖上来再走 ----------
+  (function(){
+    var veil = document.getElementById('veil');
+    if (!veil) return;
+
+    requestAnimationFrame(function(){
+      requestAnimationFrame(function(){ veil.classList.remove('in'); });
+    });
+    setTimeout(function(){ veil.classList.remove('in'); }, 700);
+
+    document.addEventListener('click', function(e){
+      var a = e.target.closest ? e.target.closest('a[href]') : null;
+      if (!a) return;
+
+      var href = a.getAttribute('href');
+      if (!href || href.charAt(0) === '#' || /^(https?:|mailto:|javascript:)/i.test(href)) return;
+      if (a.target === '_blank') return;
+
+      e.preventDefault();
+      veil.classList.add('in');
+      setTimeout(function(){ location.href = href; }, 380);
+    });
+  })();
+})();
+</script>
+</body>
+</html>

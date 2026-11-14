@@ -1,0 +1,799 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>留言区</title>
+<style>
+  :root{
+    --ink:#1f3a5f;
+    --ink-soft:rgba(31,58,95,.68);
+    --blue:#3b6ea9;
+    --blue-soft:rgba(110,150,200,.45);
+    --serif:"Songti SC","STSong","Noto Serif SC","Source Han Serif SC",Georgia,"Times New Roman",serif;
+    --sans:"Helvetica Neue",Helvetica,"PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;min-height:100%}
+
+  body{
+    background:
+      radial-gradient(150vmax 110vmax at 50% -30%, #ffffff 0%, #fbfdff 38%, #f3f9ff 72%, #e9f3ff 100%);
+    font-family:var(--sans);
+    color:var(--ink);
+    min-height:100vh;
+    padding:38px 20px 72px;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  .back{
+    position:fixed;left:18px;top:16px;z-index:5;
+    display:flex;align-items:center;justify-content:center;
+    width:40px;height:40px;border-radius:999px;
+    color:var(--ink-soft);
+    text-decoration:none;
+    transition:color .2s ease,background .2s ease;
+  }
+  .back svg{width:25px;height:25px;display:block}
+  .back:hover{color:var(--blue);background:rgba(255,255,255,.8)}
+
+  /* 左侧竖排导航 */
+  .sideBar{
+    position:fixed;
+    left:clamp(12px,2.2vmin,26px);top:50%;transform:translateY(-50%);
+    z-index:4;
+    display:flex;flex-direction:column;gap:11px;
+    padding:12px 11px;
+    border-radius:999px;
+    background:rgba(255,255,255,.5);
+    border:1px solid rgba(110,150,200,.22);
+    -webkit-backdrop-filter:blur(9px);
+    backdrop-filter:blur(9px);
+  }
+  .sItem{
+    width:46px;height:46px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    color:rgba(31,58,95,.58);
+    text-decoration:none;
+    transition:color .2s ease,background .2s ease,transform .2s ease;
+  }
+  .sItem svg{width:23px;height:23px;display:block}
+  .sItem:hover{
+    color:var(--blue);
+    background:rgba(255,255,255,.95);
+    transform:scale(1.04);
+  }
+  .sItem.on{
+    color:var(--blue);
+    background:rgba(255,255,255,.9);
+  }
+
+  @media (max-width:560px){
+    .sideBar{
+      left:50%;top:auto;bottom:clamp(12px,2.6vmin,20px);
+      transform:translateX(-50%);
+      flex-direction:row;
+      padding:9px 10px;
+    }
+    .sItem{width:40px;height:40px}
+    .sItem svg{width:20px;height:20px}
+  }
+
+  h1{
+    margin:0 auto 40px;
+    text-align:center;
+    font-family:var(--serif);font-weight:400;
+    font-size:clamp(19px,2.8vmin,28px);
+    letter-spacing:.34em;text-indent:.34em;
+    color:var(--ink);
+  }
+
+  .wrap{max-width:640px;margin:0 auto}
+
+  /* ---------- 写留言 ---------- */
+  .form{
+    background:rgba(255,255,255,.86);
+    border:1px solid rgba(140,170,205,.32);
+    border-radius:16px;
+    padding:18px;
+    box-shadow:0 14px 34px -20px rgba(40,80,130,.4), 0 2px 6px rgba(40,80,130,.06);
+    -webkit-backdrop-filter:blur(8px);
+    backdrop-filter:blur(8px);
+  }
+
+  .name{
+    width:100%;
+    border:none;outline:none;background:transparent;
+    font-family:var(--serif);font-size:14px;letter-spacing:.12em;
+    color:var(--ink);
+    padding:2px 2px 10px;
+    border-bottom:1px solid rgba(140,170,205,.28);
+    margin-bottom:12px;
+  }
+  .name::placeholder{color:rgba(31,58,95,.34);letter-spacing:.14em}
+
+  .whoPick{
+    display:flex;align-items:center;gap:9px;
+    padding:0 2px 12px;
+    margin-bottom:12px;
+    border-bottom:1px solid rgba(140,170,205,.28);
+  }
+  .whoLabel{
+    font-family:var(--serif);font-size:13.5px;
+    letter-spacing:.14em;color:rgba(31,58,95,.44);
+  }
+  .who{
+    height:30px;padding:0 16px;border-radius:999px;
+    border:1px solid rgba(110,150,200,.34);
+    background:rgba(255,255,255,.6);
+    font-family:var(--serif);font-size:13.5px;
+    letter-spacing:.1em;color:rgba(31,58,95,.62);
+    cursor:pointer;transition:all .2s ease;
+  }
+  .who:hover{border-color:rgba(110,150,200,.62)}
+  .who.on{
+    background:#3b6ea9;border-color:#3b6ea9;color:#fff;
+  }
+
+  .text{
+    width:100%;min-height:96px;resize:vertical;
+    border:none;outline:none;
+    background:rgba(238,245,253,.9);
+    border-radius:10px;
+    font-family:var(--serif);font-size:15px;line-height:1.9;
+    letter-spacing:.03em;color:var(--ink);
+    padding:12px 13px;
+    transition:background .2s ease;
+  }
+  .text:focus{background:rgba(232,241,252,1)}
+  .text::placeholder{color:rgba(31,58,95,.34)}
+
+  .row{
+    display:flex;align-items:center;justify-content:space-between;
+    gap:12px;margin-top:12px;
+  }
+
+  .tip{
+    font-size:12.5px;letter-spacing:.06em;color:rgba(31,58,95,.52);
+    opacity:0;transition:opacity .3s ease;
+  }
+  .tip.show{opacity:1}
+
+  .send{
+    flex:0 0 auto;
+    border:none;cursor:pointer;
+    padding:9px 24px;border-radius:999px;
+    font-family:var(--serif);font-size:14px;letter-spacing:.2em;text-indent:.2em;
+    color:#fff;
+    background:linear-gradient(160deg,#5b93cf,#3b6ea9);
+    box-shadow:0 8px 18px -10px rgba(40,80,130,.7);
+    transition:transform .2s ease,box-shadow .2s ease,opacity .2s ease;
+  }
+  .send:hover{transform:translateY(-1px);box-shadow:0 12px 22px -10px rgba(40,80,130,.8)}
+  .send:active{transform:translateY(0)}
+
+  /* ---------- 留言列表 ---------- */
+  .list{margin-top:34px;display:flex;flex-direction:column;gap:14px}
+
+  .item{
+    position:relative;
+    background:rgba(255,255,255,.72);
+    border:1px solid rgba(140,170,205,.24);
+    border-radius:14px;
+    padding:15px 17px;
+    box-shadow:0 10px 26px -20px rgba(40,80,130,.45);
+    animation:itemIn .5s cubic-bezier(.2,.7,.2,1) both;
+  }
+  @keyframes itemIn{
+    from{opacity:0;transform:translateY(8px)}
+    to  {opacity:1;transform:none}
+  }
+
+  .item .head{
+    display:flex;align-items:baseline;justify-content:space-between;
+    gap:10px;margin-bottom:8px;
+  }
+  .item .who{
+    font-family:var(--serif);font-size:14px;letter-spacing:.1em;
+    color:var(--blue);
+  }
+  .item .when{
+    margin-left:auto;
+    font-family:var(--serif);font-size:11.5px;letter-spacing:.1em;
+    color:rgba(31,58,95,.42);
+  }
+  .item .dots{
+    flex:0 0 auto;margin-left:6px;
+    padding:2px;border:none;background:none;cursor:pointer;
+    line-height:0;border-radius:7px;
+    color:rgba(31,58,95,.38);
+    transition:background .2s ease,color .2s ease;
+  }
+  .item .dots:hover{background:rgba(59,110,169,.1);color:rgba(59,110,169,.9)}
+
+  .item .menu{
+    position:absolute;right:12px;top:36px;
+    display:none;z-index:3;
+    padding:4px;
+    background:#fff;
+    border-radius:10px;
+    box-shadow:0 12px 26px -14px rgba(40,80,130,.55), 0 2px 6px rgba(40,80,130,.12);
+  }
+  .item.open .menu{display:block}
+  .item .undo{
+    display:block;
+    padding:7px 15px;
+    border:none;background:none;cursor:pointer;
+    font-family:var(--serif);font-size:13px;letter-spacing:.1em;
+    color:rgba(31,58,95,.82);
+    border-radius:7px;white-space:nowrap;
+    transition:background .18s ease,color .18s ease;
+  }
+  .item .undo:hover{background:rgba(59,110,169,.09);color:var(--rose)}
+  .item .undo:disabled{opacity:.5;cursor:default}
+  .item .said{
+    margin:0;
+    font-family:var(--serif);font-size:15px;line-height:1.9;
+    letter-spacing:.03em;color:var(--ink);
+    word-break:break-word;white-space:pre-wrap;
+  }
+
+  .empty{
+    margin-top:34px;text-align:center;
+    font-family:var(--serif);font-size:14px;letter-spacing:.14em;
+    color:rgba(31,58,95,.42);
+  }
+
+  @media (max-width:560px){
+    body{padding:52px 14px 96px}
+    h1{margin-bottom:30px}
+    .form{padding:15px;border-radius:14px}
+    .text{min-height:84px}
+  }
+
+  @media (prefers-reduced-motion:reduce){
+    *{animation:none!important;transition:none!important}
+  }
+  /* 换页时盖上来的一层柔光 */
+  #veil{
+    position:fixed;inset:0;z-index:60;
+    pointer-events:none;
+    opacity:0;
+    background:rgba(240,248,255,.55);
+    -webkit-backdrop-filter:blur(0px) saturate(1);
+    backdrop-filter:blur(0px) saturate(1);
+    transition:opacity .46s cubic-bezier(.65,0,.35,1), -webkit-backdrop-filter .46s cubic-bezier(.65,0,.35,1), backdrop-filter .46s cubic-bezier(.65,0,.35,1);
+  }
+  #veil.in{
+    opacity:1;
+    pointer-events:auto;
+    -webkit-backdrop-filter:blur(14px) saturate(1.08);
+    backdrop-filter:blur(14px) saturate(1.08);
+  }
+
+  @media (prefers-reduced-motion:reduce){
+    #veil{transition:none}
+  }
+  /* 点赞 / 回复 */
+  .acts{
+    display:flex;align-items:center;gap:18px;
+    margin-top:9px;
+  }
+  .act{
+    display:flex;align-items:center;gap:5px;
+    background:none;border:none;padding:0;cursor:pointer;
+    font-family:var(--serif);font-size:13px;
+    letter-spacing:.06em;color:rgba(31,58,95,.5);
+    transition:color .2s ease;
+  }
+  .act:hover{color:var(--rose)}
+  .act.liked{color:#b8486b}
+  .act svg{width:14px;height:14px;display:block}
+
+  .replies{
+    margin:2px 0 0 16px;
+    padding-left:16px;
+    border-left:1px solid rgba(110,150,200,.24);
+  }
+  .item.small{padding:12px 18px;margin-bottom:8px}
+  .item.small .said{font-size:13.5px;margin-top:6px}
+  .item.small .who{font-size:12.5px}
+
+  .replyBox{margin-top:10px;display:flex;gap:8px;align-items:flex-end}
+  .replyBox textarea{
+    flex:1;min-height:38px;max-height:120px;
+    border:1px solid rgba(110,150,200,.28);
+    background:rgba(240,247,255,.7);
+    border-radius:10px;padding:9px 11px;
+    font-family:var(--serif);font-size:13.5px;line-height:1.7;
+    color:var(--ink);outline:none;resize:vertical;
+  }
+  .replyBox textarea:focus{border-color:rgba(110,150,200,.6);background:#fff}
+  .replyBox button{
+    height:38px;padding:0 16px;border-radius:999px;
+    border:1px solid #3b6ea9;background:#3b6ea9;color:#fff;
+    font-family:var(--serif);font-size:13px;letter-spacing:.1em;
+    cursor:pointer;
+  }
+  .replyBox button:disabled{opacity:.55;cursor:default}
+
+  .toggleRep{
+    margin:10px 0 0 18px;
+    color:rgba(59,110,169,.85);
+    font-size:12.5px;
+    letter-spacing:.06em;
+  }
+  .toggleRep:hover{color:var(--rose)}
+</style>
+</head>
+<body>
+
+<a class="back" href="index.html" aria-label="回去">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M15 5 L8 12 L15 19"/>
+  </svg>
+</a>
+
+<nav class="sideBar" aria-label="页面导航">
+  <a class="sItem" href="index.html" title="主页" aria-label="主页">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M4 10.6 12 4l8 6.6V19a1 1 0 0 1-1 1h-4v-5.2H9V20H5a1 1 0 0 1-1-1z"/>
+    </svg>
+  </a>
+  <a class="sItem" href="album.html" title="相册" aria-label="相册">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <rect x="3.5" y="5" width="17" height="14" rx="2.2"/>
+      <circle cx="9" cy="10" r="1.6"/>
+      <path d="M4.5 17.2 9.6 12.6l3 2.9 3-2.6 3.9 3.7"/>
+    </svg>
+  </a>
+  <a class="sItem" href="album.html?view=tl" title="时间轴" aria-label="时间轴">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M7 4.5v15"/>
+      <circle cx="7" cy="7" r="1.6"/>
+      <circle cx="7" cy="12" r="1.6"/>
+      <circle cx="7" cy="17" r="1.6"/>
+      <path d="M12 7h7M12 12h7M12 17h5"/>
+    </svg>
+  </a>
+  <a class="sItem on" href="message.html" title="留言" aria-label="留言">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M20 12.4c0 3.6-3.6 6.5-8 6.5-.9 0-1.8-.1-2.6-.3L5 20l.9-3.2C4.7 15.6 4 14 4 12.4 4 8.8 7.6 6 12 6s8 2.8 8 6.4z"/>
+    </svg>
+  </a>
+</nav>
+
+<h1>留言区</h1>
+
+<div class="wrap">
+  <form class="form" id="form">
+    <div class="whoPick" id="whoPick">
+      <span class="whoLabel">我是</span>
+      <button type="button" class="who" data-who="cdx">cdx</button>
+      <button type="button" class="who" data-who="cy">cy</button>
+    </div>
+    <textarea class="text" id="text" maxlength="200" placeholder="想说什么就写"></textarea>
+    <div class="row">
+      <span class="tip" id="tip"></span>
+      <button class="send" type="submit">写下</button>
+    </div>
+  </form>
+
+  <div class="list" id="list"></div>
+  <div class="empty" id="empty">还没有留言，你可以是第一个</div>
+</div>
+
+<div id="veil" class="in" aria-hidden="true"></div>
+
+<script>
+(function(){
+  // ---------- 接 Supabase ----------
+  // 这两行是公开配置，publishable/anon key 本来就是给浏览器用的
+  var SB_URL = 'https://fnbdofawqxkrsmrvkzbu.supabase.co';
+  var SB_KEY = 'sb_publishable_wYr9TdOdT2aIPP7jeiLZzw_lxuhkSJm';
+
+  // 这台浏览器自己的标识，用来认哪条是自己发的
+  var VISITOR = (function(){
+    var k = 'dt_visitor';
+    var v = '';
+    try { v = localStorage.getItem(k) || ''; } catch(e){}
+    if (!v){
+      v = 'v' + Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
+      try { localStorage.setItem(k, v); } catch(e){}
+    }
+    return v;
+  })();
+
+  var UNDO_MS = 2 * 60 * 1000;   // 两分钟内可以撤
+
+  var MESSAGES = [];
+
+  var form  = document.getElementById('form');
+  var whoPick = document.getElementById('whoPick');
+  var textI = document.getElementById('text');
+  var tip   = document.getElementById('tip');
+  var list  = document.getElementById('list');
+  var empty = document.getElementById('empty');
+
+  // 身份只能选 cdx 或 cy，记住上次选的
+  var WHO = 'cdx';
+  try {
+    var saved = localStorage.getItem('dt_name');
+    if (saved === 'cdx' || saved === 'cy') WHO = saved;
+  } catch(e){}
+
+  function paintWho(){
+    var bs = whoPick.querySelectorAll('.who');
+    for (var i = 0; i < bs.length; i++){
+      bs[i].classList.toggle('on', bs[i].getAttribute('data-who') === WHO);
+    }
+  }
+  paintWho();
+
+  whoPick.addEventListener('click', function(e){
+    var b = e.target.closest ? e.target.closest('.who') : null;
+    if (!b) return;
+    e.preventDefault();
+    WHO = b.getAttribute('data-who');
+    try { localStorage.setItem('dt_name', WHO); } catch(e){}
+    paintWho();
+  });
+
+  function pad(n){ return n < 10 ? '0' + n : String(n); }
+
+  function now(){
+    var d = new Date();
+    return d.getFullYear() + '.' + pad(d.getMonth() + 1) + '.' + pad(d.getDate()) +
+           ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+  }
+
+  // 数据库里是 ISO 时间，转成本地写法
+  function fmtTime(iso){
+    var d = new Date(iso);
+    if (isNaN(d.getTime())) return '';
+    return d.getFullYear() + '.' + pad(d.getMonth() + 1) + '.' + pad(d.getDate()) +
+           ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+  }
+
+  function headers(extra){
+    var h = { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY };
+    if (extra) for (var k in extra) h[k] = extra[k];
+    return h;
+  }
+
+  function load(){
+    var p1 = fetch(SB_URL + '/rest/v1/messages?select=id,name,content,created_at,visitor,parent_id&deleted_at=is.null&order=created_at.asc&limit=200', {
+      headers: headers()
+    }).then(function(r){
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.json();
+    });
+
+    var p2 = fetch(SB_URL + '/rest/v1/message_likes?select=message_id,visitor', {
+      headers: headers()
+    }).then(function(r){
+      return r.ok ? r.json() : [];
+    }).catch(function(){ return []; });
+
+    Promise.all([p1, p2]).then(function(res){
+      var rows = res[0] || [];
+      var likes = res[1] || [];
+
+      var count = {}, mine = {};
+      likes.forEach(function(l){
+        count[l.message_id] = (count[l.message_id] || 0) + 1;
+        if (l.visitor === VISITOR) mine[l.message_id] = true;
+      });
+
+      MESSAGES = rows.map(function(x){
+        return {
+          id: x.id,
+          name: x.name || '',
+          text: x.content || '',
+          time: fmtTime(x.created_at),
+          at: Date.parse(x.created_at) || 0,
+          visitor: x.visitor || '',
+          parent: x.parent_id || null,
+          likes: count[x.id] || 0,
+          liked: !!mine[x.id]
+        };
+      });
+
+      render();
+    }).catch(function(err){
+      empty.hidden = false;
+      empty.textContent = '留言没加载出来，等下再刷新试试';
+      console.error(err);
+    });
+  }
+
+  function closeMenus(){
+    var open = list.querySelectorAll('.item.open');
+    for (var i = 0; i < open.length; i++) open[i].classList.remove('open');
+  }
+  document.addEventListener('click', closeMenus);
+
+  var HEART = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20.2 C12 20.2 3.6 15 3.6 9.1 C3.6 6.3 5.8 4.1 8.5 4.1 C10.1 4.1 11.4 4.9 12 6 C12.6 4.9 13.9 4.1 15.5 4.1 C18.2 4.1 20.4 6.3 20.4 9.1 C20.4 15 12 20.2 12 20.2 Z"/></svg>';
+  var HEART_FULL = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 20.2 C12 20.2 3.6 15 3.6 9.1 C3.6 6.3 5.8 4.1 8.5 4.1 C10.1 4.1 11.4 4.9 12 6 C12.6 4.9 13.9 4.1 15.5 4.1 C18.2 4.1 20.4 6.3 20.4 9.1 C20.4 15 12 20.2 12 20.2 Z"/></svg>';
+
+  function item(m, i, isReply){
+    var el = document.createElement('div');
+    el.className = 'item' + (isReply ? ' small' : '');
+    el.style.animationDelay = (i * 60) + 'ms';
+
+    var head = document.createElement('div');
+    head.className = 'head';
+
+    var who = document.createElement('span');
+    who.className = 'who';
+    who.textContent = m.name || '匿名';
+
+    var when = document.createElement('span');
+    when.className = 'when';
+    when.textContent = m.time || '';
+
+    head.appendChild(who);
+    head.appendChild(when);
+
+    // 自己发的、还在两分钟内，给个「⋯」，点开才有撤回
+    if (m.visitor && m.visitor === VISITOR && (Date.now() - m.at) < UNDO_MS){
+      var more = document.createElement('button');
+      more.type = 'button';
+      more.className = 'dots';
+      more.setAttribute('aria-label', '更多');
+      more.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.9"/><circle cx="12" cy="12" r="1.9"/><circle cx="19" cy="12" r="1.9"/></svg>';
+      more.addEventListener('click', function(e){
+        e.stopPropagation();
+        var was = el.classList.contains('open');
+        closeMenus();
+        if (!was) el.classList.add('open');
+      });
+      head.appendChild(more);
+
+      var menu = document.createElement('div');
+      menu.className = 'menu';
+      var undo = document.createElement('button');
+      undo.type = 'button';
+      undo.className = 'undo';
+      undo.textContent = '撤回';
+      undo.addEventListener('click', function(e){
+        e.stopPropagation();
+        withdraw(m, undo);
+      });
+      menu.appendChild(undo);
+      el.appendChild(menu);
+
+      el.classList.add('mine');
+    }
+
+    var said = document.createElement('p');
+    said.className = 'said';
+    said.textContent = m.text;
+
+    el.appendChild(head);
+    el.appendChild(said);
+
+    // 点赞 + 回复
+    var acts = document.createElement('div');
+    acts.className = 'acts';
+
+    var like = document.createElement('button');
+    like.type = 'button';
+    like.className = 'act' + (m.liked ? ' liked' : '');
+    like.innerHTML = (m.liked ? HEART_FULL : HEART) + '<span>' + (m.likes || 0) + '</span>';
+    like.addEventListener('click', function(e){
+      e.stopPropagation();
+      likeIt(m, like);
+    });
+    acts.appendChild(like);
+
+    if (!isReply){
+      var rep = document.createElement('button');
+      rep.type = 'button';
+      rep.className = 'act';
+      rep.textContent = '回复';
+      rep.addEventListener('click', function(e){
+        e.stopPropagation();
+        toggleReply(el, m);
+      });
+      acts.appendChild(rep);
+    }
+
+    el.appendChild(acts);
+    return el;
+  }
+
+  function render(){
+    list.innerHTML = '';
+    empty.hidden = MESSAGES.length > 0;
+
+    var tops = MESSAGES.filter(function(m){ return !m.parent; });
+    tops.sort(function(a, b){ return b.at - a.at; });
+
+    tops.forEach(function(m, i){
+      var el = item(m, i, false);
+      var kids = MESSAGES.filter(function(x){ return x.parent === m.id; });
+
+      if (!kids.length){
+        list.appendChild(el);
+        return;
+      }
+
+      var toggle = document.createElement('button');
+      toggle.type = 'button';
+      toggle.className = 'act toggleRep';
+      toggle.textContent = '查看 ' + kids.length + ' 条回复';
+
+      var box = document.createElement('div');
+      box.className = 'replies';
+      box.hidden = true;
+      kids.forEach(function(k, j){ box.appendChild(item(k, i + j + 1, true)); });
+
+      toggle.addEventListener('click', function(e){
+        e.stopPropagation();
+        var willOpen = box.hidden;
+        box.hidden = !willOpen;
+        toggle.textContent = willOpen ? '收起回复' : ('查看 ' + kids.length + ' 条回复');
+      });
+
+      el.appendChild(toggle);
+      list.appendChild(el);
+      list.appendChild(box);
+    });
+  }
+
+  function likeIt(m, btn){
+    if (m.liked) return;
+    btn.disabled = true;
+
+    fetch(SB_URL + '/rest/v1/message_likes', {
+      method: 'POST',
+      headers: headers({ 'Content-Type': 'application/json', Prefer: 'resolution=ignore-duplicates,return=minimal' }),
+      body: JSON.stringify({ message_id: m.id, visitor: VISITOR })
+    }).then(function(r){
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      m.liked = true;
+      m.likes = (m.likes || 0) + 1;
+      btn.classList.add('liked');
+      btn.innerHTML = HEART_FULL + '<span>' + m.likes + '</span>';
+      btn.disabled = false;
+    }).catch(function(e){
+      btn.disabled = false;
+      say('没点上，等下再试');
+      console.error(e);
+    });
+  }
+
+  function toggleReply(el, m){
+    var old = el.querySelector('.replyBox');
+    if (old){ old.remove(); return; }
+
+    var box = document.createElement('div');
+    box.className = 'replyBox';
+
+    var ta = document.createElement('textarea');
+    ta.placeholder = '回一句…';
+
+    var send = document.createElement('button');
+    send.type = 'button';
+    send.textContent = '发送';
+
+    send.addEventListener('click', function(e){
+      e.stopPropagation();
+      var t = ta.value.trim();
+      if (!t){ ta.focus(); return; }
+
+      send.disabled = true;
+      var who = WHO;
+
+      fetch(SB_URL + '/rest/v1/messages', {
+        method: 'POST',
+        headers: headers({ 'Content-Type': 'application/json', Prefer: 'return=minimal' }),
+        body: JSON.stringify({ name: who || null, content: t, visitor: VISITOR, parent_id: m.id })
+      }).then(function(r){
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        say('回了');
+        load();
+      }).catch(function(err){
+        send.disabled = false;
+        say('没发出去，等下再试');
+        console.error(err);
+      });
+    });
+
+    box.appendChild(ta);
+    box.appendChild(send);
+    el.appendChild(box);
+    setTimeout(function(){ ta.focus(); }, 60);
+  }
+
+
+  var tipTimer = null;
+  function say(msg){
+    tip.textContent = msg;
+    tip.classList.add('show');
+    clearTimeout(tipTimer);
+    tipTimer = setTimeout(function(){ tip.classList.remove('show'); }, 3200);
+  }
+
+  // 撤回：不真删，打个标记，记录还留在库里
+  function withdraw(m, btn){
+    if (btn){ btn.disabled = true; btn.style.opacity = '.5'; }
+    fetch(SB_URL + '/rest/v1/messages?id=eq.' + encodeURIComponent(m.id), {
+      method: 'PATCH',
+      headers: headers({ 'Content-Type': 'application/json', Prefer: 'return=minimal' }),
+      body: JSON.stringify({ deleted_at: new Date().toISOString() })
+    })
+      .then(function(r){
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        say('撤回了');
+        load();
+      })
+      .catch(function(err){
+        if (btn){ btn.disabled = false; btn.style.opacity = ''; }
+        say('没撤掉，可能过了两分钟');
+        console.error(err);
+      });
+  }
+
+  form.addEventListener('submit', function(e){
+    e.preventDefault();
+
+    var text = textI.value.trim();
+    if (!text){ say('写点东西再按'); textI.focus(); return; }
+
+    var who = WHO;
+    var btn = form.querySelector('.send');
+    if (btn){ btn.disabled = true; btn.style.opacity = '.6'; }
+    say('正在存…');
+
+    fetch(SB_URL + '/rest/v1/messages', {
+      method: 'POST',
+      headers: headers({ 'Content-Type': 'application/json', Prefer: 'return=minimal' }),
+      body: JSON.stringify({ name: who || null, content: text, visitor: VISITOR })
+    })
+      .then(function(r){
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        textI.value = '';
+        say('写上了');
+        load();
+      })
+      .catch(function(err){
+        say('没存上，等下再试');
+        console.error(err);
+      })
+      .then(function(){
+        if (btn){ btn.disabled = false; btn.style.opacity = ''; }
+      });
+  });
+
+  load();
+
+  // ---------- 换页：一层柔光盖上来再走 ----------
+  (function(){
+    var veil = document.getElementById('veil');
+    if (!veil) return;
+
+    requestAnimationFrame(function(){
+      requestAnimationFrame(function(){ veil.classList.remove('in'); });
+    });
+    setTimeout(function(){ veil.classList.remove('in'); }, 700);
+
+    document.addEventListener('click', function(e){
+      var a = e.target.closest ? e.target.closest('a[href]') : null;
+      if (!a) return;
+
+      var href = a.getAttribute('href');
+      if (!href || href.charAt(0) === '#' || /^(https?:|mailto:|javascript:)/i.test(href)) return;
+      if (a.target === '_blank') return;
+
+      e.preventDefault();
+      veil.classList.add('in');
+      setTimeout(function(){ location.href = href; }, 380);
+    });
+  })();
+})();
+</script>
+
+</body>
+</html>
