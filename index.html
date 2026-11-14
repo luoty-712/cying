@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
+<title>cy</title>
 <style>
   :root{
     --deep:#17324f;
@@ -311,7 +312,7 @@
     position:relative;
     display:flex;align-items:center;justify-content:center;
     font-family:var(--serif);
-    font-size:clamp(15px,2vmin,19px);
+    font-size:clamp(16px,2.2vmin,20px);
     letter-spacing:.22em;text-indent:.22em;
     color:rgba(31,58,95,.7);
     text-decoration:none;
@@ -375,7 +376,7 @@
     #veil{transition:none}
   }
   /* 登录弹窗 */
-  button.chip{font:inherit;font-family:var(--serif);cursor:pointer;}
+  button.chip{font-family:var(--serif);cursor:pointer;}
   .modal{
     position:fixed;inset:0;z-index:70;
     display:flex;align-items:center;justify-content:center;
@@ -503,12 +504,12 @@
     .sItem{width:40px;height:40px}
     .sItem svg{width:20px;height:20px}
 
-    /* 窄屏：顶部那排按钮和右上天数都收小，别挤在一起 */
-    .topNav{gap:7px}
+    /* 窄屏：顶部按钮放大一点、往下挪一点 */
+    .topNav{gap:8px;top:5.2vmin}
     .chip{
-      height:auto;padding:6px 8px;
-      font-size:9.5px;line-height:1.2;
-      letter-spacing:.02em;text-indent:.02em;
+      height:auto;padding:8px 13px;
+      font-size:13px;line-height:1.2;
+      letter-spacing:.1em;text-indent:.1em;
       white-space:nowrap;
     }
     /* 窄屏：天数挪到左上，给中间那排按钮腾地方 */
