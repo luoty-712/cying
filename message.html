@@ -779,6 +779,15 @@
     });
     setTimeout(function(){ veil.classList.remove('in'); }, 700);
 
+  // 从别的页面返回时（浏览器缓存恢复），把遮罩和弹层收干净
+  window.addEventListener('pageshow', function(e){
+    if (!e.persisted) return;
+    var v = document.getElementById('veil');
+    if (v) v.classList.remove('in');
+    var ct = document.getElementById('confetti');
+    if (ct) ct.innerHTML = '';
+  });
+
     document.addEventListener('click', function(e){
       var a = e.target.closest ? e.target.closest('a[href]') : null;
       if (!a) return;

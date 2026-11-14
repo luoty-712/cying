@@ -3,7 +3,6 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>从那天到现在</title>
 <style>
   :root{
     --deep:#17324f;
@@ -152,6 +151,13 @@
     text-indent:.42em;
     color:rgba(31,58,95,.46);
   }
+  /* 三字问候换行时：两行居中，不带逗号 */
+  .hi.stack{
+    white-space:normal;
+    text-align:center;
+    line-height:1.16;
+  }
+  .hi.stack .hi-cy{display:block}
   @keyframes hiIn{
     from{opacity:0;transform:translate(-50%,calc(-50% + 12px))}
     to  {opacity:1;transform:translate(-50%,-50%)}
@@ -305,13 +311,13 @@
     position:relative;
     display:flex;align-items:center;justify-content:center;
     font-family:var(--serif);
-    font-size:clamp(13px,1.7vmin,16px);
-    letter-spacing:.26em;text-indent:.26em;
+    font-size:clamp(15px,2vmin,19px);
+    letter-spacing:.22em;text-indent:.22em;
     color:rgba(31,58,95,.7);
     text-decoration:none;
     text-align:center;
     line-height:1.3;
-    padding:7px 17px;
+    padding:9px 20px;
     border-radius:999px;
     background:rgba(255,255,255,.62);
     border:1px solid rgba(110,150,200,.26);
@@ -517,7 +523,11 @@
     }
     .num{font-size:clamp(24px,6.4vmin,34px)}
     .unit{font-size:10px}
-    .hi{white-space:normal;padding:0 18px;text-align:center}
+    .hi{
+      white-space:nowrap;padding:0;
+      font-size:clamp(22px,7vmin,38px);
+      letter-spacing:.04em;
+    }
     .hi-sub{letter-spacing:.3em;text-indent:.3em}
     .strip{gap:9px;margin-top:6vmin}
     .strip a{width:clamp(62px,17vmin,84px)}
@@ -561,7 +571,7 @@
 </main>
 
 <nav class="topNav">
-  <a class="chip" href="album.html">回忆<br>相册</a>
+  <a class="chip" href="album.html">相册</a>
   <a class="chip" href="message.html">留言</a>
   <button class="chip" id="loginChip" type="button">登录</button>
 </nav>
@@ -1002,8 +1012,16 @@
   var hiCy = document.getElementById('hiCy');
   if (hiWord){
     var picked = HELLOS[(Math.random() * HELLOS.length) | 0];
+    var hi = document.getElementById('hi');
     hiWord.textContent = picked;
-    if (hiCy) hiCy.textContent = '，陈莹';
+    // 三个字的问候在手机上会换行，那就不要逗号、两行居中；两个字以内保持一行
+    if (picked.length >= 3){
+      if (hiCy) hiCy.textContent = '陈莹';
+      if (hi) hi.classList.add('stack');
+    } else {
+      if (hiCy) hiCy.textContent = '，陈莹';
+      if (hi) hi.classList.remove('stack');
+    }
   }
 
   // ---------- 换页：一层柔光盖上来再走 ----------
@@ -1015,6 +1033,15 @@
       requestAnimationFrame(function(){ veil.classList.remove('in'); });
     });
     setTimeout(function(){ veil.classList.remove('in'); }, 700);
+
+  // 从别的页面返回时（浏览器缓存恢复），把遮罩和弹层收干净
+  window.addEventListener('pageshow', function(e){
+    if (!e.persisted) return;
+    var v = document.getElementById('veil');
+    if (v) v.classList.remove('in');
+    var ct = document.getElementById('confetti');
+    if (ct) ct.innerHTML = '';
+  });
 
     document.addEventListener('click', function(e){
       var a = e.target.closest ? e.target.closest('a[href]') : null;
