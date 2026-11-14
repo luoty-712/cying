@@ -293,50 +293,7 @@
     background:rgba(255,255,255,.9);
   }
 
-  @media (max-width:560px){
-    .sideBar{
-      left:50%;top:auto;bottom:clamp(12px,2.6vmin,20px);
-      transform:translateX(-50%);
-      flex-direction:row;
-      padding:9px 10px;
-    }
-    .sItem{width:40px;height:40px}
-    .sItem svg{width:20px;height:20px}
-
-    /* 窄屏：顶部那排按钮和右上天数都收小，别挤在一起 */
-    .topNav{gap:7px}
-    .chip{
-      height:auto;padding:6px 8px;
-      font-size:9.5px;line-height:1.2;
-      letter-spacing:.02em;text-indent:.02em;
-      white-space:nowrap;
-    }
-    /* 窄屏：天数挪到左上，给中间那排按钮腾地方 */
-    .corner{
-      left:12px;right:auto;top:12px;
-      text-align:left;max-width:34vw;
-    }
-    .label{
-      font-size:9px;line-height:1.35;
-      letter-spacing:.02em;text-indent:0;
-      margin-bottom:1px;
-    }
-    .num{font-size:clamp(24px,6.4vmin,34px)}
-    .unit{font-size:10px}
-    .hi{white-space:normal;padding:0 18px;text-align:center}
-    .hi-sub{letter-spacing:.3em;text-indent:.3em}
-    .strip{gap:9px;margin-top:6vmin}
-    .strip a{width:clamp(62px,17vmin,84px)}
-    body{padding-bottom:104px}
-
-    /* 窄屏音乐按钮：贴右下角，去掉模糊避免和底部那排打架 */
-    #musicBtn{
-      right:14px;bottom:24px;
-      width:42px;height:42px;z-index:6;
-      background:rgba(255,255,255,.82);
-      -webkit-backdrop-filter:none;backdrop-filter:none;
-    }
-  }
+  
 
   /* 顶部并排的入口 */
   .topNav{
@@ -369,33 +326,7 @@
     transform:translateY(-1px);
   }
 
-  /* 音乐按钮 */
-  #musicBtn{
-    position:fixed;right:5vmin;bottom:5vmin;z-index:5;
-    width:clamp(44px,6vmin,56px);height:clamp(44px,6vmin,56px);
-    border-radius:50%;
-    border:1px solid rgba(90,140,190,.22);
-    background:rgba(255,255,255,.62);
-    backdrop-filter:blur(8px);
-    -webkit-backdrop-filter:blur(8px);
-    display:flex;align-items:center;justify-content:center;
-    cursor:pointer;
-    color:#3b6ea9;
-    padding:0;
-    transition:transform .25s ease, background .25s ease, box-shadow .25s ease;
-    box-shadow:0 6px 20px rgba(120,160,205,.14);
-  }
-  #musicBtn:hover{transform:translateY(-2px) scale(1.05);background:rgba(255,255,255,.88)}
-  #musicBtn:active{transform:scale(.95)}
-  #musicBtn svg{width:46%;height:46%;display:block}
-  #musicBtn.on{
-    background:rgba(216,232,255,.92);
-    animation:pulse 2.4s ease-out infinite;
-  }
-  @keyframes pulse{
-    0%{box-shadow:0 0 0 0 rgba(150,190,240,.42)}
-    70%{box-shadow:0 0 0 14px rgba(150,190,240,0)}
-    100%{box-shadow:0 0 0 0 rgba(150,190,240,0)}
+
   }
 
   /* 跟着鼠标走的一团柔光 */
@@ -555,6 +486,44 @@
     transition:opacity .26s ease,transform .34s cubic-bezier(.2,.8,.2,1);
   }
   .toast.show{opacity:1;transform:translate(-50%,0)}
+
+@media (max-width:560px){
+    .sideBar{
+      left:50%;top:auto;bottom:clamp(12px,2.6vmin,20px);
+      transform:translateX(-50%);
+      flex-direction:row;
+      padding:9px 10px;
+    }
+    .sItem{width:40px;height:40px}
+    .sItem svg{width:20px;height:20px}
+
+    /* 窄屏：顶部那排按钮和右上天数都收小，别挤在一起 */
+    .topNav{gap:7px}
+    .chip{
+      height:auto;padding:6px 8px;
+      font-size:9.5px;line-height:1.2;
+      letter-spacing:.02em;text-indent:.02em;
+      white-space:nowrap;
+    }
+    /* 窄屏：天数挪到左上，给中间那排按钮腾地方 */
+    .corner{
+      left:12px;right:auto;top:12px;
+      text-align:left;max-width:34vw;
+    }
+    .label{
+      font-size:9px;line-height:1.35;
+      letter-spacing:.02em;text-indent:0;
+      margin-bottom:1px;
+    }
+    .num{font-size:clamp(24px,6.4vmin,34px)}
+    .unit{font-size:10px}
+    .hi{white-space:normal;padding:0 18px;text-align:center}
+    .hi-sub{letter-spacing:.3em;text-indent:.3em}
+    .strip{gap:9px;margin-top:6vmin}
+    .strip a{width:clamp(62px,17vmin,84px)}
+    body{padding-bottom:104px}
+
+  }
 </style>
 </head>
 <body>
@@ -630,13 +599,7 @@
 <div id="confetti" aria-hidden="true"></div>
 <div id="stars" aria-hidden="true"></div>
 
-<button id="musicBtn" aria-label="播放音乐" title="播放音乐">
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M9 18V6l10-2v12"/>
-    <circle cx="6.5" cy="18" r="2.5"/>
-    <circle cx="16.5" cy="16" r="2.5"/>
-  </svg>
-</button>
+
 
 
 <div id="fx"></div>
@@ -987,123 +950,6 @@
     }
   })();
 
-  // ---------- 音乐按钮（现场合成，不加载任何音频文件） ----------
-  (function(){
-    var btn = document.getElementById('musicBtn');
-    if (!btn) return;
-
-    var actx = null, master = null, delay = null, fb = null;
-    var playing = false, timer = null, step = 0;
-
-    // A 小调五声音阶，一格一个八分音符，0 是休止
-    var MELODY = [
-      440.00, 0, 523.25, 0, 659.25, 587.33, 523.25, 0,
-      440.00, 0, 392.00, 0, 329.63, 0, 440.00, 0,
-      523.25, 0, 587.33, 0, 659.25, 783.99, 659.25, 0,
-      587.33, 0, 523.25, 0, 440.00, 0, 0, 0,
-      440.00, 0, 523.25, 0, 659.25, 587.33, 523.25, 0,
-      392.00, 0, 440.00, 0, 523.25, 0, 659.25, 0,
-      587.33, 659.25, 783.99, 0, 659.25, 0, 523.25, 0,
-      440.00, 0, 0, 0, 0, 0, 0, 0
-    ];
-    var BEAT = 375;   // 一格多久，毫秒
-
-    // 每两小节换一次和弦，只铺低音，撑住不空
-    var CHORDS = [
-      [110.00, 164.81],   // Am
-      [87.31, 130.81],    // F
-      [98.00, 146.83],    // G
-      [110.00, 164.81]    // Am
-    ];
-
-    function init(){
-      var AC = window.AudioContext || window.webkitAudioContext;
-      actx = new AC();
-
-      master = actx.createGain();
-      master.gain.value = 0.85;
-
-      var lp = actx.createBiquadFilter();
-      lp.type = 'lowpass';
-      lp.frequency.value = 2400;
-      lp.Q.value = 0.4;
-
-      delay = actx.createDelay(1.0);
-      delay.delayTime.value = 0.28;
-      fb = actx.createGain();
-      fb.gain.value = 0.2;
-
-      master.connect(lp);
-      lp.connect(actx.destination);
-      lp.connect(delay);
-      delay.connect(fb);
-      fb.connect(delay);
-      delay.connect(actx.destination);
-    }
-
-    function note(freq, when, vol, dur, type){
-      var d = dur || 1.5;
-      var o = actx.createOscillator();
-      var g = actx.createGain();
-
-      o.type = type || 'triangle';
-      o.frequency.value = freq;
-
-      g.gain.setValueAtTime(0.0001, when);
-      g.gain.exponentialRampToValueAtTime(vol || 0.15, when + 0.05);
-      g.gain.exponentialRampToValueAtTime(0.0001, when + d);
-
-      o.connect(g);
-      g.connect(master);
-      o.start(when);
-      o.stop(when + d + 0.05);
-    }
-
-    // 和弦铺底，很轻，慢起慢收
-    function pad(freqs, when){
-      for (var i = 0; i < freqs.length; i++){
-        note(freqs[i], when + i * 0.03, 0.045, 3.2, 'sine');
-      }
-    }
-
-    function schedule(){
-      var when = actx.currentTime + 0.08;
-      var f = MELODY[step % MELODY.length];
-
-      if (f > 0){
-        note(f, when, 0.15, 1.5, 'triangle');
-        if (step % 8 === 0) note(f / 2, when, 0.07, 1.9, 'sine');
-      }
-
-      if (step % 16 === 0){
-        pad(CHORDS[Math.floor(step / 16) % CHORDS.length], when);
-      }
-
-      step++;
-    }
-
-    function start(){
-      if (!actx) init();
-      if (actx.state === 'suspended') actx.resume();
-      if (timer) clearInterval(timer);
-      step = 0;
-      schedule();
-      timer = setInterval(schedule, BEAT);
-    }
-
-    function stop(){
-      if (timer){ clearInterval(timer); timer = null; }
-    }
-
-    btn.addEventListener('click', function(){
-      playing = !playing;
-      btn.classList.toggle('on', playing);
-      btn.setAttribute('aria-label', playing ? '停止音乐' : '播放音乐');
-      btn.setAttribute('title', playing ? '停止音乐' : '播放音乐');
-      if (playing) start();
-      else stop();
-    });
-  })();
   // ---------- 底下露出的三张照片 ----------
   (function(){
     var strip = document.getElementById('strip');
