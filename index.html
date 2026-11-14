@@ -304,15 +304,22 @@
     .sItem svg{width:20px;height:20px}
 
     /* 窄屏：顶部那排按钮和右上天数都收小，别挤在一起 */
-    .topNav{gap:6px}
+    .topNav{gap:7px}
     .chip{
-      height:32px;padding:0 11px;
-      font-size:11px;letter-spacing:.12em;text-indent:.12em;
+      height:auto;padding:6px 8px;
+      font-size:9.5px;line-height:1.2;
+      letter-spacing:.02em;text-indent:.02em;
+      white-space:nowrap;
     }
-    .corner{top:14px;right:12px}
+    /* 窄屏：天数挪到左上，给中间那排按钮腾地方 */
+    .corner{
+      left:12px;right:auto;top:12px;
+      text-align:left;max-width:34vw;
+    }
     .label{
-      font-size:10px;letter-spacing:.18em;text-indent:.18em;
-      margin-bottom:2px;
+      font-size:9px;line-height:1.35;
+      letter-spacing:.02em;text-indent:0;
+      margin-bottom:1px;
     }
     .num{font-size:clamp(24px,6.4vmin,34px)}
     .unit{font-size:10px}
@@ -321,6 +328,14 @@
     .strip{gap:9px;margin-top:6vmin}
     .strip a{width:clamp(62px,17vmin,84px)}
     body{padding-bottom:104px}
+
+    /* 窄屏音乐按钮：贴右下角，去掉模糊避免和底部那排打架 */
+    #musicBtn{
+      right:14px;bottom:24px;
+      width:42px;height:42px;z-index:6;
+      background:rgba(255,255,255,.82);
+      -webkit-backdrop-filter:none;backdrop-filter:none;
+    }
   }
 
   /* 顶部并排的入口 */
