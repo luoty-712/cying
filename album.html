@@ -605,6 +605,23 @@
   }
   .menuPop button:hover{background:rgba(236,244,253,.9);color:var(--rose)}
 
+
+  /* 长按拖动排序 */
+  .card.dragging{
+    z-index:9;
+    transform:rotate(0deg) scale(1.05) !important;
+    box-shadow:0 26px 52px -20px rgba(20,48,79,.45), 0 0 0 2px rgba(110,150,200,.5) !important;
+    opacity:.95;
+    transition:none !important;
+  }
+  body.hauling{touch-action:none;cursor:grabbing}
+  body.hauling .card{transition:none}
+  body.hauling .card:not(.dragging){opacity:.72}
+
+
+  /* 长按时别弹系统菜单、别选中文字 */
+  .card{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+  .card img{pointer-events:none}
 </style>
 </head>
 <body>
@@ -834,7 +851,10 @@
       pic.appendChild(photo);
       a.appendChild(pic);
       a.appendChild(cap);
-      a.addEventListener('click', function(){ open(rec); });
+      a.addEventListener('click', function(){
+        if (window.__dragMoved) return;
+        open(rec);
+      });
       grid.appendChild(a);
     });
 
@@ -1329,6 +1349,92 @@
       setTimeout(function(){ location.href = href; }, 380);
     });
   })();
+
+  // ---------- 长按卡片拖动排序（登录后才有） ----------
+  (function(){
+    var holdTimer = null, dragEl = null, startX = 0, startY = 0, moved = false;
+
+    function cardOf(t){ return (t && t.closest) ? t.closest('.card') : null; }
+
+    grid.addEventListener('pointerdown', function(e){
+      if (!getAuth() || dragEl) return;
+      if (e.button && e.button !== 0) return;
+      var card = cardOf(e.target);
+      if (!card || (e.target.closest && e.target.closest('.cardMenu'))) return;
+
+      startX = e.clientX; startY = e.clientY;
+      clearTimeout(holdTimer);
+      holdTimer = setTimeout(function(){
+        dragEl = card;
+        moved = false;
+        card.classList.add('dragging');
+        document.body.classList.add('hauling');
+        if (navigator.vibrate) { try { navigator.vibrate(12); } catch (err) {} }
+      }, 320);
+    });
+
+    document.addEventListener('pointermove', function(e){
+      if (!dragEl){
+        if (holdTimer && (Math.abs(e.clientX - startX) > 12 || Math.abs(e.clientY - startY) > 12)){
+          clearTimeout(holdTimer);
+          holdTimer = null;
+        }
+        return;
+      }
+      e.preventDefault();
+      moved = true;
+
+      var el = document.elementFromPoint(e.clientX, e.clientY);
+      var over = cardOf(el);
+      if (!over || over === dragEl) return;
+
+      var r = over.getBoundingClientRect();
+      var after = (e.clientX - r.left) > r.width / 2;
+      grid.insertBefore(dragEl, after ? over.nextSibling : over);
+    }, { passive: false });
+
+    function finish(){
+      if (holdTimer){ clearTimeout(holdTimer); holdTimer = null; }
+      if (!dragEl) return;
+      var el = dragEl;
+      dragEl = null;
+      el.classList.remove('dragging');
+      document.body.classList.remove('hauling');
+
+      if (moved){
+        window.__dragMoved = true;
+        setTimeout(function(){ window.__dragMoved = false; }, 260);
+        saveOrder();
+      }
+    }
+
+    document.addEventListener('pointerup', finish);
+    document.addEventListener('pointercancel', finish);
+
+    function saveOrder(){
+      var ids = Array.prototype.map.call(grid.querySelectorAll('.card'), function(c){
+        return +c.getAttribute('data-id');
+      });
+      if (!ids.length) return;
+
+      var keys = RECORDS.filter(function(r){ return !isSlave(r); })
+        .map(function(r){ return r.sort_key || 0; })
+        .sort(function(a, b){ return a - b; });
+
+      var i = 0;
+      ids.forEach(function(id){
+        var rec = null;
+        RECORDS.forEach(function(r){ if (r.id === id) rec = r; });
+        if (!rec) return;
+        var k = keys[i++];
+        if (k === undefined || rec.sort_key === k) return;
+        rec.sort_key = k;
+        api('PATCH', '/rest/v1/photos?id=eq.' + id, { sort_key: k }, { Prefer: 'return=minimal' })
+          .catch(function(){});
+      });
+    }
+  })();
+
 })();
 </script>
 </body>
