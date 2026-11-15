@@ -339,7 +339,9 @@
   .nav.next{right:max(16px,2.6vw)}
 
   .frame{
-    width:min(94vw,880px);max-height:90vh;
+    width:min(94vw,940px);
+    height:min(86vh,640px);
+    max-height:86vh;
     background:#fdfeff;
     border-radius:16px;
     padding:16px;
@@ -352,18 +354,29 @@
   .light.open .frame{transform:none}
 
   .frame .pic{
-    flex:1 1 auto;min-width:0;
-    display:flex;align-items:center;justify-content:center;gap:8px;
-    border-radius:10px;overflow:hidden;background:#fff;
+    flex:1 1 auto;min-width:0;min-height:0;
+    display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:8px;
+    border-radius:10px;background:#fff;
+    overflow-y:auto;overflow-x:hidden;
+    padding:2px;
+  }
+  .frame .pic img:only-child{margin:auto}
+  .frame .pic img{
+    flex:0 0 auto;
+    width:100%;
+    height:auto;
+    display:block;
+    object-fit:contain;
+    border-radius:6px;
   }
   .frame img{max-width:100%;max-height:76vh;object-fit:contain;display:block;border-radius:4px;min-width:0}
 
   .note{
-    flex:0 0 340px;
+    flex:0 0 340px;height:100%;min-height:0;
     display:flex;flex-direction:column;justify-content:flex-start;
     padding:20px 4px 6px 22px;
     border-left:1px solid rgba(120,140,165,.16);
-    overflow-y:auto;
+    overflow-y:auto;overscroll-behavior:contain;
   }
   .note-date{
     display:inline-block;
@@ -609,19 +622,35 @@
   /* 长按拖动排序 */
   .card.dragging{
     z-index:9;
-    transform:rotate(0deg) scale(1.05) !important;
-    box-shadow:0 26px 52px -20px rgba(20,48,79,.45), 0 0 0 2px rgba(110,150,200,.5) !important;
-    opacity:.95;
+    transform:rotate(-2.4deg) scale(1.07) translateY(-7px) !important;
+    box-shadow:0 34px 64px -26px rgba(20,48,79,.52), 0 0 0 2px rgba(150,190,235,.6) !important;
+    opacity:1 !important;
     transition:none !important;
+    cursor:grabbing;
+  }
+  .card.dragging img{
+    box-shadow:0 0 0 1px rgba(255,255,255,.9);
   }
   body.hauling{touch-action:none;cursor:grabbing}
-  body.hauling .card{transition:none}
-  body.hauling .card:not(.dragging){opacity:.72}
+  body.hauling .card:not(.dragging){
+    opacity:.5;
+    filter:blur(.5px) saturate(.85);
+    transform:rotate(var(--r,0deg)) scale(.97);
+    transition:opacity .2s ease, filter .2s ease, transform .2s ease;
+  }
 
 
   /* 长按时别弹系统菜单、别选中文字 */
-  .card{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+  .card{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-user-drag:none}
   .card img{pointer-events:none}
+
+  .frame .pic img.shot-drag{
+    outline:2px solid rgba(110,150,200,.5);
+    outline-offset:2px;
+    border-radius:6px;
+    box-shadow:0 14px 30px -14px rgba(20,48,79,.5);
+    opacity:.96;
+  }
 </style>
 </head>
 <body>
@@ -783,7 +812,7 @@
       empty.hidden = false;
       empty.textContent = '载入中…';
     }
-    fetch(SB_URL + '/rest/v1/photos?select=*&order=sort_key.asc,id.asc', {
+    return fetch(SB_URL + '/rest/v1/photos?select=*&order=sort_key.asc,id.asc', {
       headers: { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY }
     }).then(function(r){
       if (!r.ok) throw new Error('read fail');
@@ -817,6 +846,7 @@
       a.className = 'card';
       a.href = 'javascript:void(0)';
       a.setAttribute('data-id', rec.id);
+      a.setAttribute('draggable', 'false');
       a.style.animationDelay = (idx * 55) + 'ms';
       a.style.setProperty('--r', (Math.random() * 4 - 2).toFixed(2) + 'deg');
 
@@ -930,10 +960,14 @@
     CUR = rec;
 
     bigPic.innerHTML = '';
-    groupOf(rec).forEach(function(g){
+    var grp = groupOf(rec);
+    bigPic.style.setProperty('--n', grp.length);
+    grp.forEach(function(g){
       var im = document.createElement('img');
       im.src = photoSrc(g.image_path);
       im.alt = rec.title || '照片';
+      im.setAttribute('data-id', g.id);
+      im.setAttribute('draggable', 'false');
       bigPic.appendChild(im);
     });
 
@@ -1350,9 +1384,89 @@
     });
   })();
 
+
+  // ---------- 灯箱里长按拖动，调同组照片顺序 ----------
+  (function(){
+    var pic = document.getElementById('bigPic');
+    if (!pic) return;
+
+    var holdTimer = null, dragImg = null, sx = 0, sy = 0, moved = false;
+
+    pic.addEventListener('pointerdown', function(e){
+      if (!getAuth() || !CUR) return;
+      if (groupOf(CUR).length < 2) return;
+      var im = e.target.closest ? e.target.closest('img') : null;
+      if (!im) return;
+
+      sx = e.clientX; sy = e.clientY;
+      clearTimeout(holdTimer);
+      holdTimer = setTimeout(function(){
+        dragImg = im;
+        moved = false;
+        im.classList.add('shot-drag');
+        pic.style.touchAction = 'none';
+        if (navigator.vibrate) { try { navigator.vibrate(12); } catch (err) {} }
+      }, 320);
+    });
+
+    document.addEventListener('pointermove', function(e){
+      if (!dragImg){
+        if (holdTimer && (Math.abs(e.clientX - sx) > 12 || Math.abs(e.clientY - sy) > 12)){
+          clearTimeout(holdTimer); holdTimer = null;
+        }
+        return;
+      }
+      e.preventDefault();
+      moved = true;
+
+      var t = document.elementFromPoint(e.clientX, e.clientY);
+      var over = (t && t.closest) ? t.closest('img') : null;
+      if (!over || over === dragImg || over.parentNode !== pic) return;
+
+      var r = over.getBoundingClientRect();
+      var after = (e.clientY - r.top) > r.height / 2;
+      pic.insertBefore(dragImg, after ? over.nextSibling : over);
+    }, { passive: false });
+
+    function finish(){
+      if (holdTimer){ clearTimeout(holdTimer); holdTimer = null; }
+      if (!dragImg) return;
+      dragImg.classList.remove('shot-drag');
+      pic.style.touchAction = '';
+      dragImg = null;
+      if (moved){ moved = false; saveShotOrder(); }
+    }
+
+    document.addEventListener('pointerup', finish);
+    document.addEventListener('pointercancel', finish);
+
+    function saveShotOrder(){
+      if (!CUR) return;
+      var imgs = Array.prototype.slice.call(pic.querySelectorAll('img'));
+      if (imgs.length < 2) return;
+
+      var ids = imgs.map(function(im){ return +im.getAttribute('data-id'); });
+      var g = groupOf(CUR);
+      var keys = g.map(function(r){ return r.sort_key || 0; }).sort(function(a, b){ return a - b; });
+
+      ids.forEach(function(id, i){
+        var rec = null;
+        g.forEach(function(r){ if (r.id === id) rec = r; });
+        if (!rec || keys[i] === undefined || rec.sort_key === keys[i]) return;
+        rec.sort_key = keys[i];
+        api('PATCH', '/rest/v1/photos?id=eq.' + id, { sort_key: keys[i] }, { Prefer: 'return=minimal' })
+          .catch(function(){});
+      });
+    }
+  })();
+
   // ---------- 长按卡片拖动排序（登录后才有） ----------
   (function(){
     var holdTimer = null, dragEl = null, startX = 0, startY = 0, moved = false;
+
+    function stopDrag(e){
+      if (dragEl){ e.preventDefault(); e.stopPropagation(); }
+    }
 
     function cardOf(t){ return (t && t.closest) ? t.closest('.card') : null; }
 
@@ -1368,6 +1482,7 @@
         dragEl = card;
         moved = false;
         card.classList.add('dragging');
+        document.addEventListener('dragstart', stopDrag, true);
         document.body.classList.add('hauling');
         if (navigator.vibrate) { try { navigator.vibrate(12); } catch (err) {} }
       }, 320);
@@ -1400,6 +1515,7 @@
       dragEl = null;
       el.classList.remove('dragging');
       document.body.classList.remove('hauling');
+      document.removeEventListener('dragstart', stopDrag, true);
 
       if (moved){
         window.__dragMoved = true;
